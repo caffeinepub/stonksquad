@@ -1,0 +1,65 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-10T20:58:08.592Z",
+  "summary": "REQ-10 is implemented in both backend and frontend by removing the “_COIN” suffix and using the username directly as the per-user asset symbol. Backend per-user asset metadata strings were updated to avoid obvious crypto jargon (e.g., no \" Coin\" suffix / no emoji in the shown metadata). However, the anti-impersonation/name-claim requirements (REQ-9) are only partially implemented on the frontend and are not evidenced as persisted/enforced in the backend, and some user-facing copy still contains crypto-trope emojis (🚀) which conflicts with the “avoid crypto jargon/tropes” requirement (REQ-11).",
+  "missing_requirements": [
+    {
+      "id": "REQ-9",
+      "requirement": "Backend persists additional profile metadata needed for name-claim/verification status (e.g., a claimed-name confirmation flag and any supporting fields).",
+      "reason": "The backend UserProfile type shown only contains username/displayName/bio, with no persisted name-claim fields evidenced.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "Backend enforces at least one concrete anti-impersonation rule at write time (e.g., claimed display name uniqueness across all users or preventing claimed-name changes after initial creation), returning a clear error when violated.",
+      "reason": "The diff does not show any write-time enforcement of an anti-impersonation rule (the createCallerUserProfile implementation is truncated and no such checks are evidenced elsewhere).",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "UI surfaces the user’s current name-claim/verification status in the authenticated area (e.g., in the profile section) in plain English.",
+      "reason": "The provided DashboardPage/AppShell snippets do not show a verification/status indicator; the file summary mentions it, but the diff evidence shown is truncated before any such badge/text appears.",
+      "evidence": [
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/components/layout/AppShell.tsx"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "During first-time profile setup, the user must complete an explicit name-claim step (e.g., checkbox + short statement) before profile creation can be submitted, and backend persists/records that claim.",
+      "reason": "The modal requires a local `nameConfirmed` boolean to submit, but the mutation payload only sends username/displayName/bio, so the backend cannot record the claim state from the shown code.",
+      "evidence": [
+        "frontend/src/components/auth/ProfileSetupModal.tsx"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "requirement": "Remove/avoid crypto jargon and crypto tropes across user-facing copy (landing page, profile setup, dashboard, coins list, coin detail/order book).",
+      "reason": "At least two key screens still use the rocket emoji (🚀), which is explicitly called out as a crypto trope in the requirement examples.",
+      "evidence": [
+        "frontend/src/components/auth/ProfileSetupModal.tsx",
+        "frontend/src/pages/LandingPage.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [],
+  "confidence": 0.62,
+  "changed_files": [
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/auth/ProfileSetupModal.tsx",
+    "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/pages/ActivityPage.tsx",
+    "frontend/src/pages/CoinDetailPage.tsx",
+    "frontend/src/pages/CoinsPage.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
+    "frontend/src/pages/LandingPage.tsx",
+    "frontend/src/utils/assetSymbols.ts",
+    "project_state.json"
+  ]
+}

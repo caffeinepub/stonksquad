@@ -1,0 +1,110 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Anti-impersonation guardrails and plain-English naming (frontend-only)",
+  "requirements": [
+    {
+      "id": "REQ-9",
+      "summary": "Add an explicit name-claim step to first-time profile setup and surface name-claim status in the authenticated UI using plain-English copy.",
+      "acceptanceCriteria": [
+        "During first-time profile setup, the user must complete an explicit name-claim step (e.g., checkbox + short statement) before profile creation can be submitted.",
+        "Backend persists additional profile metadata needed for name-claim/verification status (e.g., a claimed-name confirmation flag and any supporting fields added by this change).",
+        "Backend enforces at least one concrete anti-impersonation rule at write time (for example: claimed display name uniqueness across all users, or preventing claimed-name changes after initial creation), returning a clear error message when violated.",
+        "UI surfaces the user’s current name-claim/verification status in the authenticated area (e.g., in the profile section) in plain English.",
+        "No user-facing text in this flow uses crypto terminology (e.g., “mint”, “token”, “coin”, “wallet”, “moon”, “pump”, “airdrops”)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "Extend the frontend UserProfile type to include name-claim metadata fields required to render name-claim status (e.g., a boolean confirmation flag and any supporting fields)."
+        },
+        {
+          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "operation": "modify",
+          "description": "Add an explicit name-claim step (checkbox + short statement input) that must be completed before submit; include inline validation and display backend error messages in a user-friendly way; ensure all copy is plain English and avoids crypto terms."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Surface the user’s current name-claim status in the profile section (plain-English labels such as confirmed/unconfirmed) and ensure the status renders safely when older profiles lack the new fields."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Keep profile-setup gating behavior consistent after adding new required fields (avoid modal flash and ensure first-time users cannot proceed without completing the updated setup). Use the selected \"authorization\" component guidance for profile setup gating patterns; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "summary": "Remove the automatic “_COIN” suffix from all frontend symbol construction and displays, using only the person’s identifier everywhere.",
+      "acceptanceCriteria": [
+        "Backend no longer creates or looks up per-user asset symbols using the “_COIN” suffix (e.g., `username.concat(\"_COIN\")` is removed and replaced with the new naming rule).",
+        "Frontend no longer constructs symbols with `_${...}_COIN` (e.g., dashboard and profile setup helper text are updated accordingly).",
+        "Any UI labels/badges that previously showed `username_COI​N` now show the updated identifier.",
+        "Newly created users receive balances under the new naming rule without errors when loading their dashboard balances."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/assetSymbols.ts",
+          "operation": "create",
+          "description": "Add a small utility to consistently derive the per-user asset identifier from a username using the new naming rule (no “_COIN” suffix), so all UI/hook callsites share one source of truth."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Replace `${userProfile.username}_COIN` symbol construction with the shared asset identifier utility and update any displayed identifier badges accordingly."
+        },
+        {
+          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "operation": "modify",
+          "description": "Remove or update any helper text that previously described an “_COIN” suffix; ensure any identifier preview reflects the new naming rule (no suffix)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "summary": "Replace crypto-like wording across key screens with plain-English, non-crypto terminology while keeping functionality unchanged.",
+      "acceptanceCriteria": [
+        "Landing page copy is updated to remove crypto jargon and crypto tropes (examples currently present include: “meme exchange”, “tradeable asset”, “Mint your personal coin”, “moon”, “pump”, “wallet”).",
+        "Profile setup modal copy is updated to remove crypto jargon (examples currently present include: “mint your personal coin”, “Your coin symbol will be …”, and the submit CTA “Create Profile & Mint Coin”).",
+        "Dashboard page copy is updated to remove crypto jargon (examples currently present include: “Your Coin”, “Your Coin Symbol”).",
+        "Coin detail page copy is updated to remove crypto jargon (examples currently present include: “Friend Coin”, “Trade this friend-stock”).",
+        "All replacements are in English and keep the underlying functionality unchanged (orders/balances still work), only the terminology changes."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/LandingPage.tsx",
+          "operation": "modify",
+          "description": "Update marketing/landing copy to remove crypto jargon/tropes (e.g., remove references to minting, coins, moon/pump, wallets) and replace with plain-English descriptions of the product without changing navigation/login behavior."
+        },
+        {
+          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "operation": "modify",
+          "description": "Update all profile setup copy and CTAs to avoid crypto terminology (including removing 'mint'/'coin' language) while preserving the same profile creation behavior."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Rename user-facing labels that reference coins/tokens/wallets to plain-English terms (e.g., 'Your identifier', 'Your balance') without changing balance fetching logic."
+        },
+        {
+          "path": "frontend/src/pages/CoinsPage.tsx",
+          "operation": "modify",
+          "description": "Update list page copy to avoid crypto terms (e.g., replace 'Friend Coins', 'mint your coin') with neutral language (e.g., 'People', 'profiles', 'identifiers') while keeping page structure unchanged."
+        },
+        {
+          "path": "frontend/src/pages/CoinDetailPage.tsx",
+          "operation": "modify",
+          "description": "Update detail/order book page labels and badges to avoid crypto jargon (e.g., replace 'Friend Coin' and 'Trade this friend-stock' with plain-English wording) while keeping order placement and order book functionality unchanged."
+        },
+        {
+          "path": "frontend/src/pages/ActivityPage.tsx",
+          "operation": "modify",
+          "description": "Scan and update any activity/market copy that uses crypto-like terms and replace with plain-English equivalents, keeping the page behavior unchanged."
+        }
+      ]
+    }
+  ]
+}

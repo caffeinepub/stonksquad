@@ -1,0 +1,108 @@
+{
+  "kind": "build_request",
+  "title": "Add anti-impersonation guardrails, remove _COIN suffix, and eliminate crypto jargon",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-9",
+      "text": "Add anti-impersonation guardrails during profile creation so users must explicitly claim the name they are using, and the system reduces obvious impersonation risks without relying on external identity providers.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "we need ways to ensure it is really their name and not someone else."
+        ]
+      },
+      "acceptanceCriteria": [
+        "During first-time profile setup, the user must complete an explicit name-claim step (e.g., checkbox + short statement) before profile creation can be submitted.",
+        "Backend persists additional profile metadata needed for name-claim/verification status (e.g., a claimed-name confirmation flag and any supporting fields added by this change).",
+        "Backend enforces at least one concrete anti-impersonation rule at write time (for example: claimed display name uniqueness across all users, or preventing claimed-name changes after initial creation), returning a clear error message when violated.",
+        "UI surfaces the user’s current name-claim/verification status in the authenticated area (e.g., in the profile section) in plain English.",
+        "No user-facing text in this flow uses crypto terminology (e.g., “mint”, “token”, “coin”, “wallet”, “moon”, “pump”, “airdrops”)."
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Change minted asset naming so it uses only the person’s name/identifier and remove the automatic “_COIN” suffix everywhere (backend storage/lookup and all frontend displays).",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "I dont like how _coin is on all minted names, it should be just there name."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend no longer creates or looks up per-user asset symbols using the “_COIN” suffix (e.g., `username.concat(\"_COIN\")` is removed and replaced with the new naming rule).",
+        "Frontend no longer constructs symbols with `_${...}_COIN` (e.g., dashboard and profile setup helper text are updated accordingly).",
+        "Any UI labels/badges that previously showed `username_COI​N` now show the updated identifier.",
+        "Newly created users receive balances under the new naming rule without errors when loading their dashboard balances."
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Remove/avoid crypto jargon across the app’s user-facing copy so the product does not feel like a crypto app; replace existing crypto-like wording in key screens (landing page, profile setup, dashboard, coins list, coin detail/order book) with plain-English, non-crypto terminology.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "This should not seem like its crypto so dont use any crypto jargon"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Landing page copy is updated to remove crypto jargon and crypto tropes (examples currently present include: “meme exchange”, “tradeable asset”, “Mint your personal coin”, “moon”, “pump”, “wallet”).",
+        "Profile setup modal copy is updated to remove crypto jargon (examples currently present include: “mint your personal coin”, “Your coin symbol will be …”, and the submit CTA “Create Profile & Mint Coin”).",
+        "Dashboard page copy is updated to remove crypto jargon (examples currently present include: “Your Coin”, “Your Coin Symbol”).",
+        "Coin detail page copy is updated to remove crypto jargon (examples currently present include: “Friend Coin”, “Trade this friend-stock”).",
+        "All replacements are in English and keep the underlying functionality unchanged (orders/balances still work), only the terminology changes."
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Update backend-generated strings/metadata related to per-user assets so they also avoid crypto jargon and do not include crypto-themed phrases or emojis.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "This should not seem like its crypto so dont use any crypto jargon"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend no longer sets per-user asset `name`/`description` fields using crypto-themed terms (examples currently present include: `\" Coin\"` suffix and `\"The ultimate meme asset 💎🚀\"`).",
+        "Backend changes do not break existing queries/mutations used by the frontend for balances, order book, or profile creation.",
+        "Any user-visible strings emitted from backend traps/errors for the modified flows are plain English and avoid crypto terminology."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor with all logic in backend/main.mo; add backend/migration.mo only if required by persisted state changes.",
+    "Do not edit any files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
+    "Do not introduce third-party/external identity verification services (no KYC providers, no social API verification, no email/SMS verification)."
+  ],
+  "nonGoals": [
+    "Building a full real-world identity verification/KYC system.",
+    "Adding third-party authentication beyond Internet Identity.",
+    "Implementing new real-time communication features (chat, websockets, push notifications)."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

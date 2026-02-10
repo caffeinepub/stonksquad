@@ -1,0 +1,70 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-anti-impersonation-guardrails-during-profile-creation-so-users-must-explicitly-claim-the-name-they-are-using-and-the-system-reduces-obvious-impersonation-risks-without-relying-on-external-identity-providers",
+      "featureTitle": "Add anti-impersonation guardrails during profile creation so users must explicitly claim the name they are using, and the system reduces obvious impersonation risks without relying on external identity providers.",
+      "files": [
+        "frontend/src/components/auth/ProfileSetupModal.tsx",
+        "frontend/src/pages/DashboardPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-change-minted-asset-naming-so-it-uses-only-the-person-s-name-identifier-and-remove-the-automatic-coin-suffix-everywhere-backend-storage-lookup-and-all-frontend-displays",
+      "featureTitle": "Change minted asset naming so it uses only the person’s name/identifier and remove the automatic “_COIN” suffix everywhere (backend storage/lookup and all frontend displays).",
+      "files": [
+        "frontend/src/components/auth/ProfileSetupModal.tsx",
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/utils/assetSymbols.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-10"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-remove-avoid-crypto-jargon-across-the-app-s-user-facing-copy-so-the-product-does-not-feel-like-a-crypto-app-replace-existing-crypto-like-wording-in-key-screens-landing-page-profile-setup-dashboard-coins-list-coin-detail-order-book-with-plain-english-non-crypto-terminology",
+      "featureTitle": "Remove/avoid crypto jargon across the app’s user-facing copy so the product does not feel like a crypto app; replace existing crypto-like wording in key screens (landing page, profile setup, dashboard, coins list, coin detail/order book) with plain-English, non-crypto terminology.",
+      "files": [
+        "frontend/src/components/auth/ProfileSetupModal.tsx",
+        "frontend/src/pages/ActivityPage.tsx",
+        "frontend/src/pages/CoinDetailPage.tsx",
+        "frontend/src/pages/CoinsPage.tsx",
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/pages/LandingPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-11"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

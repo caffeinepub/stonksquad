@@ -1,0 +1,19 @@
+{
+  "frontend/src/App.tsx": "Main application component with TanStack Router setup using a proper layout route structure where AuthenticatedLayout wraps all authenticated child routes (dashboard, coins, coin detail, activity) and handles profile setup modal display and authentication redirects.",
+  "frontend/src/pages/LandingPage.tsx": "Public landing page with plain-English copy (removed crypto jargon like \"meme exchange\", \"mint\", \"moon\", \"pump\", \"wallet\") showcasing StonkSquad as a social trading platform with profile creation and share trading.",
+  "frontend/src/pages/DashboardPage.tsx": "Authenticated dashboard displaying SQD balance, user shares, profile information with name confirmation status badge, and quick action prompts using plain-English terminology (removed \"coin\", \"mint\" references).",
+  "frontend/src/pages/CoinsPage.tsx": "Browse page renamed to \"People\" showing all member profiles with search functionality using plain-English copy (removed \"friend coins\", \"mint\" references).",
+  "frontend/src/pages/CoinDetailPage.tsx": "Detailed profile view with order book and trade forms using plain-English labels (removed \"Friend Coin\", \"friend-stock\" references) while keeping all trading functionality intact.",
+  "frontend/src/pages/ActivityPage.tsx": "Activity and leaderboard page showing top performing profiles and recent trades with plain-English copy (removed crypto jargon).",
+  "frontend/src/components/layout/AppShell.tsx": "Reusable layout shell with navigation renamed to \"People\" (from \"Coins\"), user profile display, logout functionality, and footer with caffeine.ai attribution.",
+  "frontend/src/components/auth/LoginButton.tsx": "Login/logout button component using Internet Identity hook with loading states and query cache clearing on logout.",
+  "frontend/src/components/auth/ProfileSetupModal.tsx": "Profile creation modal with name verification checkbox requiring users to confirm their real name, displays backend error messages in plain English, and shows username as unique identifier without \"_COIN\" suffix.",
+  "frontend/src/hooks/queries/useUserProfile.ts": "React Query hooks for fetching and creating user profiles with proper actor dependency handling to prevent modal flash.",
+  "frontend/src/hooks/queries/useBalances.ts": "React Query hook for fetching user balances (SQD and coin symbols) from the backend.",
+  "frontend/src/hooks/queries/useOrderBook.ts": "React Query hook for fetching order book data with 5-second polling interval for near real-time updates.",
+  "frontend/src/hooks/queries/useOrders.ts": "React Query mutation hook for placing orders with automatic invalidation of order book and balance queries on success.",
+  "frontend/src/index.css": "Global styles with OKLCH-based meme-finance color palette (ink, cream, stonk green, warning orange) for both light and dark modes.",
+  "frontend/tailwind.config.js": "Tailwind configuration with custom color tokens, Inter/JetBrains Mono fonts, and extended theme matching the meme-finance aesthetic.",
+  "frontend/index.html": "HTML entry point with StonkSquad title, favicon, and meta description.",
+  "frontend/src/utils/assetSymbols.ts": "Utility function that derives per-user asset identifiers from usernames without any suffix, providing a single source of truth for symbol construction."
+}

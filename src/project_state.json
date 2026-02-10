@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 5,
+  "summary": "Build “StonkSquad”: a web app that turns friends into tradeable “stocks”/profiles by creating a per-user tradable asset on account creation, functioning like an exchange for friend-stocks, while avoiding crypto jargon and crypto-like branding.",
+  "architectural_notes": [
+    "Product copy/terminology should avoid crypto jargon; prefer neutral language (e.g., “stocks/shares/credits”) throughout UI."
+  ],
+  "known_issues": [],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-implement-internet-identity-sign-in-and-an-application-level-user-profile-so-a-user-can-create-an-account-in-stonksquad-using-their-internet-identity-principal",
+      "title": "Implement Internet Identity sign-in and an application-level user profile so a user can create an account in StonkSquad using their Internet Identity principal.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-stonksquad-frontend-ui-for-landing-page-authenticated-dashboard-portfolio-browse-search-friend-coins-coin-detail-page-with-order-book-and-trade-ticket-and-a-simple-activity-leaderboard-view",
+      "title": "Build the StonkSquad frontend UI for: landing page, authenticated dashboard/portfolio, browse/search friend coins, coin detail page with order book and trade ticket, and a simple activity/leaderboard view.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-use-react-query-to-integrate-the-frontend-with-the-motoko-actor-for-all-reads-writes-profile-mint-status-balances-coin-list-order-book-placing-canceling-orders-with-loading-error-states",
+      "title": "Use React Query to integrate the frontend with the Motoko actor for all reads/writes (profile, mint status, balances, coin list, order book, placing/canceling orders) with loading/error states.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-define-and-apply-one-coherent-visual-theme-for-stonksquad-distinct-style-with-consistent-color-palette-typography-spacing-and-component-styling-across-all-pages-without-using-a-blue-purple-default-look",
+      "title": "Define and apply one coherent visual theme for StonkSquad (distinct style with consistent color palette, typography, spacing, and component styling) across all pages without using a blue+purple default look.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-generated-static-image-assets-for-brand-identity-and-use-them-in-the-ui-do-not-serve-images-through-the-backend",
+      "title": "Add generated static image assets for brand identity and use them in the UI (do not serve images through the backend).",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-anti-impersonation-guardrails-during-profile-creation-so-users-must-explicitly-claim-the-name-they-are-using-and-the-system-reduces-obvious-impersonation-risks-without-relying-on-external-identity-providers",
+      "title": "Add anti-impersonation guardrails during profile creation so users must explicitly claim the name they are using, and the system reduces obvious impersonation risks without relying on external identity providers.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-change-minted-asset-naming-so-it-uses-only-the-person-s-name-identifier-and-remove-the-automatic-coin-suffix-everywhere-backend-storage-lookup-and-all-frontend-displays",
+      "title": "Change minted asset naming so it uses only the person’s name/identifier and remove the automatic “_COIN” suffix everywhere (backend storage/lookup and all frontend displays).",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-avoid-crypto-jargon-across-the-app-s-user-facing-copy-so-the-product-does-not-feel-like-a-crypto-app-replace-existing-crypto-like-wording-in-key-screens-landing-page-profile-setup-dashboard-coins-list-coin-detail-order-book-with-plain-english-non-crypto-terminology",
+      "title": "Remove/avoid crypto jargon across the app’s user-facing copy so the product does not feel like a crypto app; replace existing crypto-like wording in key screens (landing page, profile setup, dashboard, coins list, coin detail/order book) with plain-English, non-crypto terminology.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Create StonkSquad app where users mint a meme coin representing themselves on account creation, enabling an exchange for trading friend-stocks.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "On first successful account creation, mint a unique per-user meme coin (“friend stock”) representing that user, with deterministic identity (e.g., derived from the user’s principal), and persist all coin metadata and balances in the single Motoko main actor.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Implement an internal trading currency/quote asset (e.g., “SQD credits”) used to buy/sell friend coins, including an initial airdrop to new accounts and balance tracking per principal.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Create a basic exchange mechanism for friend coins that supports placing buy/sell orders quoted in SQD, matching orders, updating balances atomically, and exposing market data needed by the UI.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add a mechanism to verify/confirm that a user is claiming their real name (prevent impersonation) before/when creating their tradable friend-stock/profile.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Change minted asset naming so it uses just the person’s name (remove the automatic “_coin” suffix) across the product/UI.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Remove/avoid crypto jargon across the app (UI text, labels, and terminology) so it does not feel like a crypto product.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Update backend-generated strings/metadata related to per-user assets so they also avoid crypto jargon and do not include crypto-themed phrases or emojis.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "StonkSquad",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

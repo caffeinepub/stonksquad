@@ -1,0 +1,93 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-10T20:58:08.595Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 4,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-10",
+        "summary": "Change minted asset naming so it uses only the person’s name/identifier and remove the automatic “_COIN” suffix everywhere (backend storage/lookup and all frontend displays).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/assetSymbols.ts",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/components/auth/ProfileSetupModal.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/assetSymbols.ts",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/components/auth/ProfileSetupModal.tsx"
+        ]
+      },
+      {
+        "id": "REQ-11",
+        "summary": "Remove/avoid crypto jargon across the app’s user-facing copy so the product does not feel like a crypto app; replace existing crypto-like wording in key screens (landing page, profile setup, dashboard, coins list, coin detail/order book) with plain-English, non-crypto terminology.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/LandingPage.tsx",
+          "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/pages/CoinsPage.tsx",
+          "frontend/src/pages/CoinDetailPage.tsx",
+          "frontend/src/pages/ActivityPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/LandingPage.tsx",
+          "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/pages/CoinsPage.tsx",
+          "frontend/src/pages/CoinDetailPage.tsx",
+          "frontend/src/pages/ActivityPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-12",
+        "summary": "Update backend-generated strings/metadata related to per-user assets so they also avoid crypto jargon and do not include crypto-themed phrases or emojis.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Add anti-impersonation guardrails during profile creation so users must explicitly claim the name they are using, and the system reduces obvious impersonation risks without relying on external identity providers.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "frontend/src/pages/DashboardPage.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "build-request.json",
+    "build-template/README.md",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/auth/ProfileSetupModal.tsx",
+    "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/pages/ActivityPage.tsx",
+    "frontend/src/pages/CoinDetailPage.tsx",
+    "frontend/src/pages/CoinsPage.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
+    "frontend/src/pages/LandingPage.tsx",
+    "frontend/src/utils/assetSymbols.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}
