@@ -1,71 +1,84 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T20:58:08.595Z",
+  "generatedAt": "2026-02-10T23:00:20.921Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
+    "total": 5,
     "implemented": 3,
     "items": [
       {
-        "id": "REQ-10",
-        "summary": "Change minted asset naming so it uses only the person’s name/identifier and remove the automatic “_COIN” suffix everywhere (backend storage/lookup and all frontend displays).",
+        "id": "REQ-42",
+        "summary": "Update the app’s visual theme to a less cyberpunk, more trading/alpha aesthetic while maintaining all existing features and routes. This includes updating the global design tokens (colors, typography, radii, shadows/glows) so the UI reads as \"trading terminal / alpha\" rather than neon cyberpunk, and applying the updated look consistently across Landing, AppShell header/footer, Dashboard, People/Coins, Coin Detail, Activity/Leaderboard, Deposit, and Withdraw pages.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/assetSymbols.ts",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/components/auth/ProfileSetupModal.tsx"
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/LandingPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/assetSymbols.ts",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/components/auth/ProfileSetupModal.tsx"
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/LandingPage.tsx"
         ]
       },
       {
-        "id": "REQ-11",
-        "summary": "Remove/avoid crypto jargon across the app’s user-facing copy so the product does not feel like a crypto app; replace existing crypto-like wording in key screens (landing page, profile setup, dashboard, coins list, coin detail/order book) with plain-English, non-crypto terminology.",
+        "id": "REQ-43",
+        "summary": "Replace the current cyberpunk background treatment with a new trading/alpha background treatment across both public and authenticated layouts. Update the shared background component (currently frontend/src/components/layout/CyberBackground.tsx) and its usages (e.g., LandingPage and AppShell) so the new background is used everywhere, including appropriate opacity/gradient overlays to preserve readability.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/LandingPage.tsx",
-          "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/pages/CoinsPage.tsx",
-          "frontend/src/pages/CoinDetailPage.tsx",
-          "frontend/src/pages/ActivityPage.tsx"
+          "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
+          "frontend/src/components/layout/CyberBackground.tsx",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/LandingPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/LandingPage.tsx",
-          "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/pages/CoinsPage.tsx",
-          "frontend/src/pages/CoinDetailPage.tsx",
-          "frontend/src/pages/ActivityPage.tsx"
+          "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
+          "frontend/src/components/layout/CyberBackground.tsx",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/pages/LandingPage.tsx"
         ]
       },
       {
-        "id": "REQ-12",
-        "summary": "Update backend-generated strings/metadata related to per-user assets so they also avoid crypto jargon and do not include crypto-themed phrases or emojis.",
+        "id": "REQ-44",
+        "summary": "Ensure fair-launch behavior by making market cap start at exactly 0 for every newly created asset until there is real market activity establishing a price. Update backend market-cap/price logic so that assets with no valid price-discovery data have current price = 0 and therefore market cap = 0 (rather than a non-zero default).",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-9",
-        "summary": "Add anti-impersonation guardrails during profile creation so users must explicitly claim the name they are using, and the system reduces obvious impersonation risks without relying on external identity providers.",
+        "id": "REQ-45",
+        "summary": "Fix backend creator market-cap aggregation correctness so that per-creator totals reflect the sum of each created coin’s market cap (current price * totalSupply), and ensure the creator ranking query iterates over the actual creator set (users) rather than relying on unrelated balance maps. Keep the leaderboard metric as creator market cap.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-46",
+        "summary": "Audit and fix coin/asset flows so that \"all coins work correct\" end-to-end: coin discovery/listing, symbol resolution, coin detail loading, order book loading, and order placement should behave correctly for any valid symbol, including newly created users/assets. Add or improve frontend empty/error states where backend returns null/missing data, without changing user-facing text away from English.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/backend.d.ts",
-          "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/hooks/queries/useCoinsDirectory.ts",
+          "frontend/src/pages/CoinsPage.tsx",
+          "frontend/src/pages/CoinDetailPage.tsx",
+          "frontend/src/hooks/queries/useOrderBook.ts",
+          "frontend/src/hooks/queries/useOrders.ts",
+          "frontend/src/pages/ActivityPage.tsx",
+          "frontend/src/utils/currency.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "frontend/src/pages/DashboardPage.tsx"
+          "frontend/src/hooks/queries/useCoinsDirectory.ts",
+          "frontend/src/pages/CoinsPage.tsx",
+          "frontend/src/pages/CoinDetailPage.tsx",
+          "frontend/src/hooks/queries/useOrderBook.ts",
+          "frontend/src/hooks/queries/useOrders.ts",
+          "frontend/src/pages/ActivityPage.tsx",
+          "frontend/src/utils/currency.ts"
         ]
       }
     ]
@@ -73,18 +86,22 @@
   "changedFiles": [
     "backend/main.mo",
     "build-request.json",
-    "build-template/README.md",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/auth/ProfileSetupModal.tsx",
+    "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
     "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/components/layout/CyberBackground.tsx",
+    "frontend/src/hooks/queries/useCoinsDirectory.ts",
+    "frontend/src/hooks/queries/useOrderBook.ts",
+    "frontend/src/hooks/queries/useOrders.ts",
+    "frontend/src/index.css",
     "frontend/src/pages/ActivityPage.tsx",
     "frontend/src/pages/CoinDetailPage.tsx",
     "frontend/src/pages/CoinsPage.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
     "frontend/src/pages/LandingPage.tsx",
-    "frontend/src/utils/assetSymbols.ts",
+    "frontend/src/utils/currency.ts",
+    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

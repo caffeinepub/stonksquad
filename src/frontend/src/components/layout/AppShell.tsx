@@ -1,14 +1,22 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Outlet, useNavigate } from '@tanstack/react-router';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '../../hooks/queries/useUserProfile';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Home, Users, Activity } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { User, LogOut, LayoutDashboard, Users, Activity, Menu, Wallet, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { SiX, SiFacebook, SiInstagram } from 'react-icons/si';
+import CyberBackground from './CyberBackground';
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { identity, clear, isLoggingIn } = useInternetIdentity();
+export default function AppShell() {
+  const { clear } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -19,124 +27,136 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     navigate({ to: '/' });
   };
 
-  const navLinks = [
-    { to: '/dashboard', label: 'Dashboard', icon: Home },
-    { to: '/coins', label: 'People', icon: Users },
-    { to: '/activity', label: 'Activity', icon: Activity },
+  const navItems = [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'People', icon: Users, path: '/coins' },
+    { label: 'Activity', icon: Activity, path: '/activity' },
+    { label: 'Deposit', icon: ArrowDownToLine, path: '/deposit' },
+    { label: 'Withdraw', icon: ArrowUpFromLine, path: '/withdraw' },
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/40 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-3">
-              <img src="/assets/generated/stonksquad-icon.dim_256x256.png" alt="StonkSquad" className="h-10 w-10" />
-              <span className="text-2xl font-black tracking-tight">StonkSquad</span>
-            </Link>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Trading Background */}
+      <CyberBackground />
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  activeProps={{ className: 'text-foreground' }}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="border-b border-primary/10 backdrop-blur-md sticky top-0 z-50 bg-background/95 terminal-glow">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              {/* Logo */}
+              <div className="flex items-center gap-3">
+                <img
+                  src="/assets/generated/elite-emblem-stoic.dim_512x512.png"
+                  alt="StonkSquad"
+                  className="h-10 w-10"
+                />
+                <span className="text-2xl font-bold font-display tracking-tight text-foreground">
+                  STONKSQUAD
+                </span>
+              </div>
 
-            {/* User Profile & Logout */}
-            <div className="hidden md:flex items-center gap-4">
-              {identity && userProfile && (
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-chart-1 text-primary-foreground text-xs font-bold">
-                      {userProfile.displayName.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">{userProfile.displayName}</span>
-                </div>
-              )}
-              <Button onClick={handleLogout} disabled={isLoggingIn} variant="outline" size="sm">
-                {isLoggingIn ? 'Logging out...' : 'Logout'}
-              </Button>
-            </div>
-
-            {/* Mobile Menu */}
-            <Sheet>
-              <SheetTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <div className="flex flex-col gap-6 mt-8">
-                  {identity && userProfile && (
-                    <div className="flex items-center gap-3 pb-4 border-b">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-chart-1 text-primary-foreground font-bold">
-                          {userProfile.displayName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{userProfile.displayName}</p>
-                        <p className="text-xs text-muted-foreground">@{userProfile.username}</p>
-                      </div>
-                    </div>
-                  )}
-                  <nav className="flex flex-col gap-4">
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.to}
-                        to={link.to}
-                        className="flex items-center gap-3 text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
-                        activeProps={{ className: 'text-foreground' }}
-                      >
-                        <link.icon className="h-5 w-5" />
-                        {link.label}
-                      </Link>
-                    ))}
-                  </nav>
-                  <Button onClick={handleLogout} disabled={isLoggingIn} variant="outline" className="mt-4">
-                    {isLoggingIn ? 'Logging out...' : 'Logout'}
+              {/* Desktop Navigation */}
+              <nav className="hidden md:flex items-center gap-2">
+                {navItems.map((item) => (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    onClick={() => navigate({ to: item.path })}
+                    className="font-mono text-sm"
+                  >
+                    <item.icon className="h-4 w-4 mr-2" />
+                    {item.label}
                   </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-      </header>
+                ))}
+              </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
+              {/* User Menu */}
+              <div className="flex items-center gap-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="terminal-border font-mono">
+                      <User className="h-4 w-4 mr-2" />
+                      <span className="hidden sm:inline">
+                        {userProfile?.displayName || 'USER'}
+                      </span>
+                      <Menu className="h-4 w-4 ml-2 md:hidden" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 terminal-border">
+                    <DropdownMenuLabel className="font-mono">
+                      {userProfile?.displayName || 'User'}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    {/* Mobile Navigation */}
+                    <div className="md:hidden">
+                      {navItems.map((item) => (
+                        <DropdownMenuItem
+                          key={item.path}
+                          onClick={() => navigate({ to: item.path })}
+                          className="font-mono"
+                        >
+                          <item.icon className="h-4 w-4 mr-2" />
+                          {item.label}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                    </div>
 
-      {/* Footer */}
-      <footer className="border-t border-border/40 mt-auto">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <span>© {new Date().getFullYear()} StonkSquad</span>
-            <span>
-              Built with ❤️ using{' '}
-              <a
-                href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(
-                  typeof window !== 'undefined' ? window.location.hostname : 'stonksquad'
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors font-medium"
-              >
-                caffeine.ai
-              </a>
-            </span>
+                    <DropdownMenuItem onClick={handleLogout} className="font-mono text-destructive">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
           </div>
-        </div>
-      </footer>
+        </header>
+
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8">
+          <Outlet />
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-primary/10 mt-20 backdrop-blur-sm bg-background/90">
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>© {new Date().getFullYear()} StonkSquad</span>
+                <span>•</span>
+                <span>
+                  Built with ❤️ using{' '}
+                  <a
+                    href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(
+                      typeof window !== 'undefined' ? window.location.hostname : 'stonksquad'
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary transition-colors font-medium"
+                  >
+                    caffeine.ai
+                  </a>
+                </span>
+              </div>
+              <div className="flex gap-4">
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                  <SiX className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                  <SiFacebook className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                  <SiInstagram className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

@@ -18,6 +18,21 @@ export const UserProfile = IDL.Record({
   'username' : IDL.Text,
   'displayName' : IDL.Text,
 });
+export const ShoppingItem = IDL.Record({
+  'productName' : IDL.Text,
+  'currency' : IDL.Text,
+  'quantity' : IDL.Nat,
+  'priceInCents' : IDL.Nat,
+  'productDescription' : IDL.Text,
+});
+export const Coin = IDL.Record({
+  'owner' : IDL.Principal,
+  'metadata' : IDL.Opt(IDL.Text),
+  'name' : IDL.Text,
+  'description' : IDL.Text,
+  'totalSupply' : IDL.Nat,
+  'symbol' : IDL.Text,
+});
 export const OrderSide = IDL.Variant({ 'buy' : IDL.Null, 'sell' : IDL.Null });
 export const Time = IDL.Int;
 export const Order = IDL.Record({
@@ -29,31 +44,86 @@ export const Order = IDL.Record({
   'quantity' : IDL.Nat,
   'price' : IDL.Float64,
 });
+export const StripeSessionStatus = IDL.Variant({
+  'completed' : IDL.Record({
+    'userPrincipal' : IDL.Opt(IDL.Text),
+    'response' : IDL.Text,
+  }),
+  'failed' : IDL.Record({ 'error' : IDL.Text }),
+});
+export const StripeConfiguration = IDL.Record({
+  'allowedCountries' : IDL.Vec(IDL.Text),
+  'secretKey' : IDL.Text,
+});
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'completeWithdrawal' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'createCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'createCheckoutSession' : IDL.Func(
+      [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
+  'createStripeSession' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+  'finalizeDeposit' : IDL.Func([IDL.Text], [], []),
   'getBalance' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCreatorCapRanking' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
+      ['query'],
+    ),
+  'getCreatorCoinsWithMarketCaps' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(Coin), IDL.Nat))],
+      ['query'],
+    ),
   'getOrderBook' : IDL.Func(
       [IDL.Text, OrderSide, IDL.Opt(IDL.Nat)],
       [IDL.Vec(Order)],
       ['query'],
     ),
+  'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
   'placeOrder' : IDL.Func(
       [IDL.Text, OrderSide, IDL.Float64, IDL.Nat],
       [IDL.Nat],
       [],
     ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -69,6 +139,21 @@ export const idlFactory = ({ IDL }) => {
     'username' : IDL.Text,
     'displayName' : IDL.Text,
   });
+  const ShoppingItem = IDL.Record({
+    'productName' : IDL.Text,
+    'currency' : IDL.Text,
+    'quantity' : IDL.Nat,
+    'priceInCents' : IDL.Nat,
+    'productDescription' : IDL.Text,
+  });
+  const Coin = IDL.Record({
+    'owner' : IDL.Principal,
+    'metadata' : IDL.Opt(IDL.Text),
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+    'totalSupply' : IDL.Nat,
+    'symbol' : IDL.Text,
+  });
   const OrderSide = IDL.Variant({ 'buy' : IDL.Null, 'sell' : IDL.Null });
   const Time = IDL.Int;
   const Order = IDL.Record({
@@ -80,31 +165,83 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Nat,
     'price' : IDL.Float64,
   });
+  const StripeSessionStatus = IDL.Variant({
+    'completed' : IDL.Record({
+      'userPrincipal' : IDL.Opt(IDL.Text),
+      'response' : IDL.Text,
+    }),
+    'failed' : IDL.Record({ 'error' : IDL.Text }),
+  });
+  const StripeConfiguration = IDL.Record({
+    'allowedCountries' : IDL.Vec(IDL.Text),
+    'secretKey' : IDL.Text,
+  });
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'completeWithdrawal' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'createCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'createCheckoutSession' : IDL.Func(
+        [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'createStripeSession' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+    'finalizeDeposit' : IDL.Func([IDL.Text], [], []),
     'getBalance' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCreatorCapRanking' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
+        ['query'],
+      ),
+    'getCreatorCoinsWithMarketCaps' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(Coin), IDL.Nat))],
+        ['query'],
+      ),
     'getOrderBook' : IDL.Func(
         [IDL.Text, OrderSide, IDL.Opt(IDL.Nat)],
         [IDL.Vec(Order)],
         ['query'],
       ),
+    'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
     'placeOrder' : IDL.Func(
         [IDL.Text, OrderSide, IDL.Float64, IDL.Nat],
         [IDL.Nat],
         [],
       ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setStripeConfiguration' : IDL.Func([StripeConfiguration], [], []),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
+      ),
   });
 };
 

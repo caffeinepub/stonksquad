@@ -5,6 +5,8 @@ import DashboardPage from './pages/DashboardPage';
 import CoinsPage from './pages/CoinsPage';
 import CoinDetailPage from './pages/CoinDetailPage';
 import ActivityPage from './pages/ActivityPage';
+import DepositPage from './pages/DepositPage';
+import WithdrawPage from './pages/WithdrawPage';
 import AppShell from './components/layout/AppShell';
 import ProfileSetupModal from './components/auth/ProfileSetupModal';
 import { useGetCallerUserProfile } from './hooks/queries/useUserProfile';
@@ -32,9 +34,7 @@ function AuthenticatedLayout() {
 
   return (
     <>
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      <AppShell />
       {showProfileSetup && <ProfileSetupModal />}
     </>
   );
@@ -84,10 +84,29 @@ const activityRoute = createRoute({
   component: ActivityPage,
 });
 
+const depositRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: '/deposit',
+  component: DepositPage,
+});
+
+const withdrawRoute = createRoute({
+  getParentRoute: () => authenticatedRoute,
+  path: '/withdraw',
+  component: WithdrawPage,
+});
+
 // Create router
 const routeTree = rootRoute.addChildren([
   landingRoute,
-  authenticatedRoute.addChildren([dashboardRoute, coinsRoute, coinDetailRoute, activityRoute]),
+  authenticatedRoute.addChildren([
+    dashboardRoute,
+    coinsRoute,
+    coinDetailRoute,
+    activityRoute,
+    depositRoute,
+    withdrawRoute,
+  ]),
 ]);
 
 const router = createRouter({ routeTree });

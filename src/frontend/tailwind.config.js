@@ -33,6 +33,10 @@ export default {
                     DEFAULT: 'oklch(var(--destructive) / <alpha-value>)',
                     foreground: 'oklch(var(--destructive-foreground))'
                 },
+                success: {
+                    DEFAULT: 'oklch(var(--success) / <alpha-value>)',
+                    foreground: 'oklch(var(--success-foreground))'
+                },
                 muted: {
                     DEFAULT: 'oklch(var(--muted) / <alpha-value>)',
                     foreground: 'oklch(var(--muted-foreground) / <alpha-value>)'
@@ -72,7 +76,8 @@ export default {
                     'Roboto',
                     'sans-serif'
                 ],
-                mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'monospace']
+                mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'monospace'],
+                display: ['Inter', 'system-ui', 'sans-serif']
             },
             keyframes: {
                 'accordion-down': {
@@ -82,11 +87,21 @@ export default {
                 'accordion-up': {
                     from: { height: 'var(--radix-accordion-content-height)' },
                     to: { height: '0' }
+                },
+                'pulse-glow': {
+                    '0%, 100%': { opacity: '1' },
+                    '50%': { opacity: '0.7' }
+                },
+                'slide-up': {
+                    '0%': { transform: 'translateY(10px)', opacity: '0' },
+                    '100%': { transform: 'translateY(0)', opacity: '1' }
                 }
             },
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
-                'accordion-up': 'accordion-up 0.2s ease-out'
+                'accordion-up': 'accordion-up 0.2s ease-out',
+                'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+                'slide-up': 'slide-up 0.3s ease-out'
             }
         }
     },

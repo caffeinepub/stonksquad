@@ -1,108 +1,114 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Anti-impersonation guardrails and plain-English naming (frontend-only)",
+  "title": "Trading/alpha theme refresh, new background, and hardened coin flows (frontend-only)",
   "requirements": [
     {
-      "id": "REQ-9",
-      "summary": "Add an explicit name-claim step to first-time profile setup and surface name-claim status in the authenticated UI using plain-English copy.",
+      "id": "REQ-42",
+      "summary": "Shift global UI styling from neon cyberpunk to a trading/alpha terminal aesthetic while preserving all existing routes and behaviors.",
       "acceptanceCriteria": [
-        "During first-time profile setup, the user must complete an explicit name-claim step (e.g., checkbox + short statement) before profile creation can be submitted.",
-        "Backend persists additional profile metadata needed for name-claim/verification status (e.g., a claimed-name confirmation flag and any supporting fields added by this change).",
-        "Backend enforces at least one concrete anti-impersonation rule at write time (for example: claimed display name uniqueness across all users, or preventing claimed-name changes after initial creation), returning a clear error message when violated.",
-        "UI surfaces the user’s current name-claim/verification status in the authenticated area (e.g., in the profile section) in plain English.",
-        "No user-facing text in this flow uses crypto terminology (e.g., “mint”, “token”, “coin”, “wallet”, “moon”, “pump”, “airdrops”)."
+        "All existing pages/routes still render and function (auth gating, navigation, trading/order placement, Stripe deposit/withdraw flows, leaderboard).",
+        "Global theme variables in frontend/src/index.css are updated away from neon/cyberpunk styling to a trading/alpha palette and typography, and the new tokens are used by existing shadcn/Tailwind classes.",
+        "Cyberpunk-specific utility styling (e.g., heavy neon glows/borders) is either toned down or replaced with trading/terminal-like treatments while keeping layout and component structure intact."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/backend.d.ts",
+          "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Extend the frontend UserProfile type to include name-claim metadata fields required to render name-claim status (e.g., a boolean confirmation flag and any supporting fields)."
+          "description": "Update global design tokens (OKLCH colors, radii) to a dark neutral trading/terminal palette with restrained accents; adjust cyberpunk utility classes (e.g., cyber-glow/cyber-border and rank glow utilities) to be subtle, terminal-like shadows/borders instead of heavy neon."
         },
         {
-          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "path": "frontend/tailwind.config.js",
           "operation": "modify",
-          "description": "Add an explicit name-claim step (checkbox + short statement input) that must be completed before submit; include inline validation and display backend error messages in a user-friendly way; ensure all copy is plain English and avoids crypto terms."
+          "description": "Adjust typography defaults to better match a trading/alpha aesthetic (e.g., modern sans + readable mono for numbers), keeping existing Tailwind token wiring intact."
         },
         {
-          "path": "frontend/src/pages/DashboardPage.tsx",
+          "path": "frontend/src/components/layout/AppShell.tsx",
           "operation": "modify",
-          "description": "Surface the user’s current name-claim status in the profile section (plain-English labels such as confirmed/unconfirmed) and ensure the status renders safely when older profiles lack the new fields."
+          "description": "Replace the most cyberpunk-leaning shell styling touches (e.g., overly strong glow emphasis) with the updated trading/alpha styling while keeping navigation, auth/logout, and layout structure identical."
         },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Keep profile-setup gating behavior consistent after adding new required fields (avoid modal flash and ensure first-time users cannot proceed without completing the updated setup). Use the selected \"authorization\" component guidance for profile setup gating patterns; verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Remove the automatic “_COIN” suffix from all frontend symbol construction and displays, using only the person’s identifier everywhere.",
-      "acceptanceCriteria": [
-        "Backend no longer creates or looks up per-user asset symbols using the “_COIN” suffix (e.g., `username.concat(\"_COIN\")` is removed and replaced with the new naming rule).",
-        "Frontend no longer constructs symbols with `_${...}_COIN` (e.g., dashboard and profile setup helper text are updated accordingly).",
-        "Any UI labels/badges that previously showed `username_COI​N` now show the updated identifier.",
-        "Newly created users receive balances under the new naming rule without errors when loading their dashboard balances."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/assetSymbols.ts",
-          "operation": "create",
-          "description": "Add a small utility to consistently derive the per-user asset identifier from a username using the new naming rule (no “_COIN” suffix), so all UI/hook callsites share one source of truth."
-        },
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "modify",
-          "description": "Replace `${userProfile.username}_COIN` symbol construction with the shared asset identifier utility and update any displayed identifier badges accordingly."
-        },
-        {
-          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "operation": "modify",
-          "description": "Remove or update any helper text that previously described an “_COIN” suffix; ensure any identifier preview reflects the new naming rule (no suffix)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Replace crypto-like wording across key screens with plain-English, non-crypto terminology while keeping functionality unchanged.",
-      "acceptanceCriteria": [
-        "Landing page copy is updated to remove crypto jargon and crypto tropes (examples currently present include: “meme exchange”, “tradeable asset”, “Mint your personal coin”, “moon”, “pump”, “wallet”).",
-        "Profile setup modal copy is updated to remove crypto jargon (examples currently present include: “mint your personal coin”, “Your coin symbol will be …”, and the submit CTA “Create Profile & Mint Coin”).",
-        "Dashboard page copy is updated to remove crypto jargon (examples currently present include: “Your Coin”, “Your Coin Symbol”).",
-        "Coin detail page copy is updated to remove crypto jargon (examples currently present include: “Friend Coin”, “Trade this friend-stock”).",
-        "All replacements are in English and keep the underlying functionality unchanged (orders/balances still work), only the terminology changes."
-      ],
-      "file_operations": [
         {
           "path": "frontend/src/pages/LandingPage.tsx",
           "operation": "modify",
-          "description": "Update marketing/landing copy to remove crypto jargon/tropes (e.g., remove references to minting, coins, moon/pump, wallets) and replace with plain-English descriptions of the product without changing navigation/login behavior."
+          "description": "Tune landing page styling to the new trading/alpha look (headers/cards/hero treatments) while preserving copy in English, login flow behavior, and existing layout sections."
+        }
+      ]
+    },
+    {
+      "id": "REQ-43",
+      "summary": "Replace the cyberpunk background with a new fullscreen trading/alpha background across public and authenticated layouts using the shared background component.",
+      "acceptanceCriteria": [
+        "Landing page and authenticated AppShell both use the updated background component and no longer reference a cyberpunk-only background treatment.",
+        "Background remains fixed/fullscreen with layered overlay so text contrast remains strong on all pages.",
+        "No regressions in scroll behavior, z-index layering, or clickability of UI due to the background layer."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
+          "operation": "create",
+          "description": "Add the required generated asset as a static frontend image: frontend/public/assets/generated/alpha-bg.dim_1920x1080.png."
         },
         {
-          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "path": "frontend/src/components/layout/CyberBackground.tsx",
           "operation": "modify",
-          "description": "Update all profile setup copy and CTAs to avoid crypto terminology (including removing 'mint'/'coin' language) while preserving the same profile creation behavior."
+          "description": "Update the shared background component to use the new generated image at frontend/public/assets/generated/alpha-bg.dim_1920x1080.png and apply a trading/terminal-style overlay (fixed, fullscreen, layered) that preserves readability and clickability."
         },
         {
-          "path": "frontend/src/pages/DashboardPage.tsx",
+          "path": "frontend/src/components/layout/AppShell.tsx",
           "operation": "modify",
-          "description": "Rename user-facing labels that reference coins/tokens/wallets to plain-English terms (e.g., 'Your identifier', 'Your balance') without changing balance fetching logic."
+          "description": "Ensure the authenticated layout uses the updated shared background component without extra wrapper opacity layers that could break layering/z-index or reduce contrast."
+        },
+        {
+          "path": "frontend/src/pages/LandingPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the public landing layout uses the updated shared background component consistently and that the overlay maintains strong text contrast."
+        }
+      ]
+    },
+    {
+      "id": "REQ-46",
+      "summary": "Harden coin discovery, symbol routing, coin detail loading, order book display, and order placement UX with robust empty/error handling (English text).",
+      "acceptanceCriteria": [
+        "Coins/People page navigation consistently routes to the correct Coin Detail page for a selected user/asset symbol.",
+        "Coin Detail page shows a clear English empty state when there are no orders yet, and does not imply a non-zero market cap/price when there is no price-discovery data.",
+        "Placing buy/sell orders continues to work with existing validations; failures surface as non-crashing UI error states rather than silent failure.",
+        "Activity/Leaderboard renders 0 market cap correctly for creators with no price-discovery data (no NaN, no negative values, no unexpected default)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/queries/useCoinsDirectory.ts",
+          "operation": "create",
+          "description": "Create React Query hooks to (1) build a coin directory from backend capabilities (creator coins + symbols) and (2) resolve a coin/creator/profile by symbol for Coin Detail, with safe handling for missing/null backend data."
         },
         {
           "path": "frontend/src/pages/CoinsPage.tsx",
           "operation": "modify",
-          "description": "Update list page copy to avoid crypto terms (e.g., replace 'Friend Coins', 'mint your coin') with neutral language (e.g., 'People', 'profiles', 'identifiers') while keeping page structure unchanged."
+          "description": "Switch coin discovery/listing to use the new directory hook so listings are based on actual backend coin symbols (not derived-only symbols); add clear English empty/error states when no coins/profiles can be resolved; ensure navigation uses the resolved symbol."
         },
         {
           "path": "frontend/src/pages/CoinDetailPage.tsx",
           "operation": "modify",
-          "description": "Update detail/order book page labels and badges to avoid crypto jargon (e.g., replace 'Friend Coin' and 'Trade this friend-stock' with plain-English wording) while keeping order placement and order book functionality unchanged."
+          "description": "Update coin detail loading to resolve the coin and creator via symbol (using the new hook), display an English empty state when there are no orders, and add a non-misleading price-discovery indicator (show 0 when no qualifying data) without breaking order placement."
+        },
+        {
+          "path": "frontend/src/hooks/queries/useOrderBook.ts",
+          "operation": "modify",
+          "description": "Improve robustness by ensuring symbol is normalized/validated before querying and that query errors are surfaced to the UI layer (via React Query error state) without crashes."
+        },
+        {
+          "path": "frontend/src/hooks/queries/useOrders.ts",
+          "operation": "modify",
+          "description": "Ensure order placement failures propagate meaningful errors (no silent failures) and invalidate the correct cached queries for the affected symbol so the UI refreshes reliably after successful placements."
         },
         {
           "path": "frontend/src/pages/ActivityPage.tsx",
           "operation": "modify",
-          "description": "Scan and update any activity/market copy that uses crypto-like terms and replace with plain-English equivalents, keeping the page behavior unchanged."
+          "description": "Render creator market caps (bigint) safely (including 0) without NaN/negative/default artifacts; avoid unsafe Number conversions for display formatting; keep all user-facing text in English."
+        },
+        {
+          "path": "frontend/src/utils/currency.ts",
+          "operation": "modify",
+          "description": "Add a bigint-safe formatter for large integer market-cap values (including 0) for consistent display in Activity/Leaderboard (and optionally other pages) without relying on lossy Number conversion."
         }
       ]
     }

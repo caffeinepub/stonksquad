@@ -1,13 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Reduce impersonation risk during profile creation and remove crypto-like naming/jargon throughout the app.
+**Goal:** Shift the UI from a cyberpunk look to a trading/alpha “terminal” aesthetic while keeping all existing features/routes, and ensure newly created assets start with $0 market cap until real price discovery.
 
 **Planned changes:**
-- Add a required “name claim” step during first-time profile setup, persist name-claim/verification metadata, and enforce at least one anti-impersonation rule on profile writes with clear plain-English errors.
-- Show the user’s current name-claim/verification status in the authenticated profile area using non-crypto wording.
-- Remove the automatic “_COIN” suffix from per-user asset naming everywhere (backend creation/lookup and all frontend displays), using only the person’s name/identifier.
-- Update user-facing copy on key screens (landing, profile setup, dashboard, list/detail/order book) to replace crypto terminology with plain-English alternatives while keeping functionality unchanged.
-- Update backend-generated per-user asset strings/metadata (e.g., name/description and any modified error text) to avoid crypto-themed terms, phrases, or emojis.
+- Update global design tokens (colors, typography, radii, shadows/glows) to a trading/alpha palette and apply the look consistently across all existing pages (Landing, AppShell header/footer, Dashboard, People/Coins, Coin Detail, Activity/Leaderboard, Deposit, Withdraw).
+- Replace the cyberpunk background implementation by updating the shared background component (currently `frontend/src/components/layout/CyberBackground.tsx`) and its usages so a new trading/alpha background treatment is used across public and authenticated layouts with readable overlays.
+- Update backend market price/market-cap logic so assets with no qualifying price-discovery data return current price = 0 and market cap = 0 (including creator aggregated totals).
+- Fix backend creator market-cap aggregation and ranking so per-creator totals correctly sum each created coin’s market cap, and rankings iterate over the actual creator/user set.
+- Audit and fix coin/asset flows end-to-end (discovery/listing, symbol resolution, coin detail loading, order book loading, order placement), and add/improve frontend English empty/error states when backend data is missing/null.
 
-**User-visible outcome:** Users can create profiles only after explicitly claiming their name, see their claim/verification status, and use the app with non-crypto terminology and per-user assets labeled without “_COIN”.
+**User-visible outcome:** The app retains all existing pages and functionality but appears as a trading/alpha terminal experience with a new background; newly created coins show $0 price/market cap until real activity occurs, creator market-cap rankings are correct, and coin pages handle empty/missing data without breaking.

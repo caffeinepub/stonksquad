@@ -2,11 +2,13 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-anti-impersonation-guardrails-during-profile-creation-so-users-must-explicitly-claim-the-name-they-are-using-and-the-system-reduces-obvious-impersonation-risks-without-relying-on-external-identity-providers",
-      "featureTitle": "Add anti-impersonation guardrails during profile creation so users must explicitly claim the name they are using, and the system reduces obvious impersonation risks without relying on external identity providers.",
+      "featureId": "feature-update-the-app-s-visual-theme-to-a-less-cyberpunk-more-trading-alpha-aesthetic-while-maintaining-all-existing-features-and-routes-this-includes-updating-the-global-design-tokens-colors-typography-radii-shadows-glows-so-the-ui-reads-as-trading-terminal-alpha-rather-than-neon-cyberpunk-and-applying-the-updated-look-consistently-across-landing-appshell-header-footer-dashboard-people-coins-coin-detail-activity-leaderboard-deposit-and-withdraw-pages",
+      "featureTitle": "Update the app’s visual theme to a less cyberpunk, more trading/alpha aesthetic while maintaining all existing features and routes. This includes updating the global design tokens (colors, typography, radii, shadows/glows) so the UI reads as \"trading terminal / alpha\" rather than neon cyberpunk, and applying the updated look consistently across Landing, AppShell header/footer, Dashboard, People/Coins, Coin Detail, Activity/Leaderboard, Deposit, and Withdraw pages.",
       "files": [
-        "frontend/src/components/auth/ProfileSetupModal.tsx",
-        "frontend/src/pages/DashboardPage.tsx"
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/index.css",
+        "frontend/src/pages/LandingPage.tsx",
+        "frontend/tailwind.config.js"
       ],
       "components": [
         "authorization@4.0.0",
@@ -14,43 +16,21 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-9"
+        "REQ-42"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-change-minted-asset-naming-so-it-uses-only-the-person-s-name-identifier-and-remove-the-automatic-coin-suffix-everywhere-backend-storage-lookup-and-all-frontend-displays",
-      "featureTitle": "Change minted asset naming so it uses only the person’s name/identifier and remove the automatic “_COIN” suffix everywhere (backend storage/lookup and all frontend displays).",
+      "featureId": "feature-replace-the-current-cyberpunk-background-treatment-with-a-new-trading-alpha-background-treatment-across-both-public-and-authenticated-layouts-update-the-shared-background-component-currently-frontend-src-components-layout-cyberbackground-tsx-and-its-usages-e-g-landingpage-and-appshell-so-the-new-background-is-used-everywhere-including-appropriate-opacity-gradient-overlays-to-preserve-readability",
+      "featureTitle": "Replace the current cyberpunk background treatment with a new trading/alpha background treatment across both public and authenticated layouts. Update the shared background component (currently frontend/src/components/layout/CyberBackground.tsx) and its usages (e.g., LandingPage and AppShell) so the new background is used everywhere, including appropriate opacity/gradient overlays to preserve readability.",
       "files": [
-        "frontend/src/components/auth/ProfileSetupModal.tsx",
-        "frontend/src/pages/DashboardPage.tsx",
-        "frontend/src/utils/assetSymbols.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-10"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-remove-avoid-crypto-jargon-across-the-app-s-user-facing-copy-so-the-product-does-not-feel-like-a-crypto-app-replace-existing-crypto-like-wording-in-key-screens-landing-page-profile-setup-dashboard-coins-list-coin-detail-order-book-with-plain-english-non-crypto-terminology",
-      "featureTitle": "Remove/avoid crypto jargon across the app’s user-facing copy so the product does not feel like a crypto app; replace existing crypto-like wording in key screens (landing page, profile setup, dashboard, coins list, coin detail/order book) with plain-English, non-crypto terminology.",
-      "files": [
-        "frontend/src/components/auth/ProfileSetupModal.tsx",
-        "frontend/src/pages/ActivityPage.tsx",
-        "frontend/src/pages/CoinDetailPage.tsx",
-        "frontend/src/pages/CoinsPage.tsx",
-        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/components/layout/CyberBackground.tsx",
         "frontend/src/pages/LandingPage.tsx"
       ],
       "components": [
@@ -59,10 +39,39 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-11"
+        "REQ-43"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-audit-and-fix-coin-asset-flows-so-that-all-coins-work-correct-end-to-end-coin-discovery-listing-symbol-resolution-coin-detail-loading-order-book-loading-and-order-placement-should-behave-correctly-for-any-valid-symbol-including-newly-created-users-assets-add-or-improve-frontend-empty-error-states-where-backend-returns-null-missing-data-without-changing-user-facing-text-away-from-english",
+      "featureTitle": "Audit and fix coin/asset flows so that \"all coins work correct\" end-to-end: coin discovery/listing, symbol resolution, coin detail loading, order book loading, and order placement should behave correctly for any valid symbol, including newly created users/assets. Add or improve frontend empty/error states where backend returns null/missing data, without changing user-facing text away from English.",
+      "files": [
+        "frontend/src/hooks/queries/useCoinsDirectory.ts",
+        "frontend/src/hooks/queries/useOrderBook.ts",
+        "frontend/src/hooks/queries/useOrders.ts",
+        "frontend/src/pages/ActivityPage.tsx",
+        "frontend/src/pages/CoinDetailPage.tsx",
+        "frontend/src/pages/CoinsPage.tsx",
+        "frontend/src/utils/currency.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-46"
       ],
       "confidence": "high"
     }
