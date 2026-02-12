@@ -1,115 +1,113 @@
 {
   "kind": "build_request",
-  "title": "Shift UI to trading/alpha theme and enforce $0 starting market cap for new assets",
+  "title": "Add per-user trend graph (public) for creator market cap over time",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-42",
-      "text": "Update the app’s visual theme to a less cyberpunk, more trading/alpha aesthetic while maintaining all existing features and routes. This includes updating the global design tokens (colors, typography, radii, shadows/glows) so the UI reads as \"trading terminal / alpha\" rather than neon cyberpunk, and applying the updated look consistently across Landing, AppShell header/footer, Dashboard, People/Coins, Coin Detail, Activity/Leaderboard, Deposit, and Withdraw pages.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "change the theme, background and all, to less cyber punk and more trafing / alpha while maintaining all features."
-        ]
-      },
-      "acceptanceCriteria": [
-        "All existing pages/routes still render and function (auth gating, navigation, trading/order placement, Stripe deposit/withdraw flows, leaderboard).",
-        "Global theme variables in frontend/src/index.css are updated away from neon/cyberpunk styling to a trading/alpha palette and typography, and the new tokens are used by existing shadcn/Tailwind classes.",
-        "Cyberpunk-specific utility styling (e.g., heavy neon glows/borders) is either toned down or replaced with trading/terminal-like treatments while keeping layout and component structure intact."
-      ]
-    },
-    {
-      "id": "REQ-43",
-      "text": "Replace the current cyberpunk background treatment with a new trading/alpha background treatment across both public and authenticated layouts. Update the shared background component (currently frontend/src/components/layout/CyberBackground.tsx) and its usages (e.g., LandingPage and AppShell) so the new background is used everywhere, including appropriate opacity/gradient overlays to preserve readability.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "change the theme, background and all, to less cyber punk and more trafing / alpha"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Landing page and authenticated AppShell both use the updated background component and no longer reference a cyberpunk-only background treatment.",
-        "Background remains fixed/fullscreen with layered overlay so text contrast remains strong on all pages.",
-        "No regressions in scroll behavior, z-index layering, or clickability of UI due to the background layer."
-      ]
-    },
-    {
-      "id": "REQ-44",
-      "text": "Ensure fair-launch behavior by making market cap start at exactly 0 for every newly created asset until there is real market activity establishing a price. Update backend market-cap/price logic so that assets with no valid price-discovery data have current price = 0 and therefore market cap = 0 (rather than a non-zero default).",
+      "id": "REQ-1",
+      "text": "Add a backend API that returns a public per-user time-series suitable for graphing a trend over time, so any viewer can request the trend for any specified user principal.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Make sure marketcap starts at 0"
+          "can you make a graph for every user so people can see trend"
         ]
       },
       "acceptanceCriteria": [
-        "For any coin with no qualifying price-discovery data, backend market-cap calculations return 0 for that coin and 0 for its creator’s aggregated market cap.",
-        "Creating a user profile/coin does not implicitly set a non-zero price or non-zero market cap.",
-        "Creator leaderboard entries for creators whose coins have no price-discovery data show creatorMarketCap = 0."
+        "Backend exposes a new public query method that accepts a target user Principal and returns an ordered list of (timestamp, value) points.",
+        "The method is callable by any caller (including non-admins) without trapping for authorization reasons.",
+        "Returned series is sorted by timestamp ascending and capped/limited to prevent unbounded responses (e.g., optional limit parameter or a fixed maximum)."
       ]
     },
     {
-      "id": "REQ-45",
-      "text": "Fix backend creator market-cap aggregation correctness so that per-creator totals reflect the sum of each created coin’s market cap (current price * totalSupply), and ensure the creator ranking query iterates over the actual creator set (users) rather than relying on unrelated balance maps. Keep the leaderboard metric as creator market cap.",
+      "id": "REQ-2",
+      "text": "Track and store creator market cap trend points per user over time, updating the time-series whenever an event occurs that can change creator market cap (at minimum: when any order is placed).",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Make sure marketcap starts at 0 and all coins work correct"
+          "can you make a graph for every user so people can see trend"
         ]
       },
       "acceptanceCriteria": [
-        "getCreatorCapRanking returns a sorted list (high to low) based on correct creator market cap totals computed from the creator’s launched coins.",
-        "getCreatorCoinsWithMarketCaps returns totals that equal the sum across the returned coin list of (current price * totalSupply) in consistent units.",
-        "Creators that exist in users are included in ranking even if they have no SQD/other legacy balance entries, and creators with zero market cap rank appropriately (including showing 0)."
+        "When an order is placed, the backend appends a new trend point for the relevant creator(s) so the trend series changes over time.",
+        "New users start with an initial trend point representing a fair-launch starting value (0) at profile creation time.",
+        "The trend tracking does not break existing order placement behavior and does not change existing return types for current APIs."
       ]
     },
     {
-      "id": "REQ-46",
-      "text": "Audit and fix coin/asset flows so that \"all coins work correct\" end-to-end: coin discovery/listing, symbol resolution, coin detail loading, order book loading, and order placement should behave correctly for any valid symbol, including newly created users/assets. Add or improve frontend empty/error states where backend returns null/missing data, without changing user-facing text away from English.",
-      "target": "both",
+      "id": "REQ-3",
+      "text": "Add a public backend API to fetch a user's public profile data for display in public contexts (e.g., leaderboard rows), without requiring caller==user or admin permissions.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "all coins work correct"
+          "can you make a graph for every user so people can see trend"
         ]
       },
       "acceptanceCriteria": [
-        "Coins/People page navigation consistently routes to the correct Coin Detail page for a selected user/asset symbol.",
-        "Coin Detail page shows a clear English empty state when there are no orders yet, and does not imply a non-zero market cap/price when there is no price-discovery data.",
-        "Placing buy/sell orders continues to work with existing validations; failures surface as non-crashing UI error states rather than silent failure.",
-        "Activity/Leaderboard renders 0 market cap correctly for creators with no price-discovery data (no NaN, no negative values, no unexpected default)."
+        "Backend exposes a new public query method that returns a user’s public profile data by Principal (or returns null if missing).",
+        "The new public profile query is callable by any caller without trapping for authorization.",
+        "Existing restricted profile method(s) remain unchanged (no widening of access on the existing protected method)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement a frontend trend graph UI for each user so people can view trend history from the leaderboard (Activity page).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "can you make a graph for every user so people can see trend"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Activity page displays an inline mini trend visualization (sparkline) or a clear ‘View trend’ action per leaderboard row.",
+        "Clicking/tapping a user’s trend opens a detailed view (e.g., dialog/drawer/section) that renders the full time-series graph with labeled axes/values (English labels).",
+        "The graph renders correctly for empty/short series (0–1 point) with a clear English empty-state message.",
+        "UI uses existing Tailwind/Shadcn components (composed, not modifying immutable UI source files)."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add React Query hooks to fetch per-user trend series and public profile data, and update the leaderboard row implementation to use the new public profile API (avoiding unauthorized traps).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "can you make a graph for every user so people can see trend"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A new query hook fetches a user’s trend series from the backend and is used by the Activity leaderboard row/chart UI.",
+        "The leaderboard’s profile lookup no longer calls the restricted getUserProfile method; it uses the new public profile query.",
+        "All new queries include loading and error states consistent with existing patterns (e.g., Skeletons and simple English error text)."
       ]
     }
   ],
   "constraints": [
-    "Respect the single-actor backend architecture: all Motoko logic changes must be implemented in backend/main.mo.",
-    "Do not modify files under frontend/src/components/ui (read-only shadcn sources); compose them instead.",
-    "Do not modify frontend immutable paths listed in SYSTEM_CONTEXT (e.g., frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not edit files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
+    "Use English for all user-facing UI text."
   ],
   "nonGoals": [
-    "Do not remove or redesign existing product features (Internet Identity auth, profiles, order book, trading ticket, leaderboard, deposit/withdraw/Stripe flows).",
-    "Do not add new third-party auth providers or new backend services/databases.",
-    "Do not change the ranking metric away from creator market cap."
+    "Do not add real-time updates (no websockets/streaming).",
+    "Do not add third-party charting libraries unless already present; prefer a lightweight in-app SVG/canvas chart component.",
+    "Do not change the leaderboard ranking metric (it remains based on creator market cap).",
+    "Do not implement external analytics or external database storage."
   ],
   "imageRequirements": {
-    "required": [
-      "Fullscreen trading/alpha background image with subtle finance/terminal vibe, dark neutral palette, minimal neon (alpha-bg.dim_1920x1080.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

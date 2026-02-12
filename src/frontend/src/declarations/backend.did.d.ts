@@ -18,6 +18,10 @@ export interface Coin {
   'totalSupply' : bigint,
   'symbol' : string,
 }
+export interface MarketCapTrendPoint {
+  'marketCap' : bigint,
+  'timestamp' : Time,
+}
 export interface Order {
   'coinSymbol' : string,
   'side' : OrderSide,
@@ -87,10 +91,12 @@ export interface _SERVICE {
     [],
     Array<[Principal, Array<Coin>, bigint]>
   >,
+  'getMarketCapTrend' : ActorMethod<[Principal], Array<MarketCapTrendPoint>>,
   'getOrderBook' : ActorMethod<
     [string, OrderSide, [] | [bigint]],
     Array<Order>
   >,
+  'getPublicUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,

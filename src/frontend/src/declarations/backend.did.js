@@ -33,8 +33,12 @@ export const Coin = IDL.Record({
   'totalSupply' : IDL.Nat,
   'symbol' : IDL.Text,
 });
-export const OrderSide = IDL.Variant({ 'buy' : IDL.Null, 'sell' : IDL.Null });
 export const Time = IDL.Int;
+export const MarketCapTrendPoint = IDL.Record({
+  'marketCap' : IDL.Nat,
+  'timestamp' : Time,
+});
+export const OrderSide = IDL.Variant({ 'buy' : IDL.Null, 'sell' : IDL.Null });
 export const Order = IDL.Record({
   'coinSymbol' : IDL.Text,
   'side' : OrderSide,
@@ -99,9 +103,19 @@ export const idlService = IDL.Service({
       [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(Coin), IDL.Nat))],
       ['query'],
     ),
+  'getMarketCapTrend' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Vec(MarketCapTrendPoint)],
+      ['query'],
+    ),
   'getOrderBook' : IDL.Func(
       [IDL.Text, OrderSide, IDL.Opt(IDL.Nat)],
       [IDL.Vec(Order)],
+      ['query'],
+    ),
+  'getPublicUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
       ['query'],
     ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
@@ -154,8 +168,12 @@ export const idlFactory = ({ IDL }) => {
     'totalSupply' : IDL.Nat,
     'symbol' : IDL.Text,
   });
-  const OrderSide = IDL.Variant({ 'buy' : IDL.Null, 'sell' : IDL.Null });
   const Time = IDL.Int;
+  const MarketCapTrendPoint = IDL.Record({
+    'marketCap' : IDL.Nat,
+    'timestamp' : Time,
+  });
+  const OrderSide = IDL.Variant({ 'buy' : IDL.Null, 'sell' : IDL.Null });
   const Order = IDL.Record({
     'coinSymbol' : IDL.Text,
     'side' : OrderSide,
@@ -217,9 +235,19 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(Coin), IDL.Nat))],
         ['query'],
       ),
+    'getMarketCapTrend' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(MarketCapTrendPoint)],
+        ['query'],
+      ),
     'getOrderBook' : IDL.Func(
         [IDL.Text, OrderSide, IDL.Opt(IDL.Nat)],
         [IDL.Vec(Order)],
+        ['query'],
+      ),
+    'getPublicUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
         ['query'],
       ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),

@@ -1,84 +1,66 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T23:00:20.921Z",
+  "generatedAt": "2026-02-12T20:51:51.138Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 5,
-    "implemented": 3,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-42",
-        "summary": "Update the app’s visual theme to a less cyberpunk, more trading/alpha aesthetic while maintaining all existing features and routes. This includes updating the global design tokens (colors, typography, radii, shadows/glows) so the UI reads as \"trading terminal / alpha\" rather than neon cyberpunk, and applying the updated look consistently across Landing, AppShell header/footer, Dashboard, People/Coins, Coin Detail, Activity/Leaderboard, Deposit, and Withdraw pages.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/components/layout/AppShell.tsx",
-          "frontend/src/pages/LandingPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/components/layout/AppShell.tsx",
-          "frontend/src/pages/LandingPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-43",
-        "summary": "Replace the current cyberpunk background treatment with a new trading/alpha background treatment across both public and authenticated layouts. Update the shared background component (currently frontend/src/components/layout/CyberBackground.tsx) and its usages (e.g., LandingPage and AppShell) so the new background is used everywhere, including appropriate opacity/gradient overlays to preserve readability.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
-          "frontend/src/components/layout/CyberBackground.tsx",
-          "frontend/src/components/layout/AppShell.tsx",
-          "frontend/src/pages/LandingPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
-          "frontend/src/components/layout/CyberBackground.tsx",
-          "frontend/src/components/layout/AppShell.tsx",
-          "frontend/src/pages/LandingPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-44",
-        "summary": "Ensure fair-launch behavior by making market cap start at exactly 0 for every newly created asset until there is real market activity establishing a price. Update backend market-cap/price logic so that assets with no valid price-discovery data have current price = 0 and therefore market cap = 0 (rather than a non-zero default).",
+        "id": "REQ-1",
+        "summary": "Add a backend API that returns a public per-user time-series suitable for graphing a trend over time, so any viewer can request the trend for any specified user principal.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-45",
-        "summary": "Fix backend creator market-cap aggregation correctness so that per-creator totals reflect the sum of each created coin’s market cap (current price * totalSupply), and ensure the creator ranking query iterates over the actual creator set (users) rather than relying on unrelated balance maps. Keep the leaderboard metric as creator market cap.",
+        "id": "REQ-2",
+        "summary": "Track and store creator market cap trend points per user over time, updating the time-series whenever an event occurs that can change creator market cap (at minimum: when any order is placed).",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-46",
-        "summary": "Audit and fix coin/asset flows so that \"all coins work correct\" end-to-end: coin discovery/listing, symbol resolution, coin detail loading, order book loading, and order placement should behave correctly for any valid symbol, including newly created users/assets. Add or improve frontend empty/error states where backend returns null/missing data, without changing user-facing text away from English.",
+        "id": "REQ-3",
+        "summary": "Add a public backend API to fetch a user's public profile data for display in public contexts (e.g., leaderboard rows), without requiring caller==user or admin permissions.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Implement a frontend trend graph UI for each user so people can view trend history from the leaderboard (Activity page).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/queries/useCoinsDirectory.ts",
-          "frontend/src/pages/CoinsPage.tsx",
-          "frontend/src/pages/CoinDetailPage.tsx",
-          "frontend/src/hooks/queries/useOrderBook.ts",
-          "frontend/src/hooks/queries/useOrders.ts",
-          "frontend/src/pages/ActivityPage.tsx",
-          "frontend/src/utils/currency.ts"
+          "frontend/src/components/trends/MarketCapSparkline.tsx",
+          "frontend/src/components/trends/MarketCapTrendDialog.tsx",
+          "frontend/src/utils/trendChart.ts",
+          "frontend/src/pages/ActivityPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/queries/useCoinsDirectory.ts",
-          "frontend/src/pages/CoinsPage.tsx",
-          "frontend/src/pages/CoinDetailPage.tsx",
-          "frontend/src/hooks/queries/useOrderBook.ts",
-          "frontend/src/hooks/queries/useOrders.ts",
-          "frontend/src/pages/ActivityPage.tsx",
-          "frontend/src/utils/currency.ts"
+          "frontend/src/components/trends/MarketCapSparkline.tsx",
+          "frontend/src/components/trends/MarketCapTrendDialog.tsx",
+          "frontend/src/utils/trendChart.ts",
+          "frontend/src/pages/ActivityPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Add React Query hooks to fetch per-user trend series and public profile data, and update the leaderboard row implementation to use the new public profile API (avoiding unauthorized traps).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/queries/useMarketCapTrend.ts",
+          "frontend/src/hooks/queries/useUserProfile.ts",
+          "frontend/src/pages/ActivityPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/queries/useMarketCapTrend.ts",
+          "frontend/src/hooks/queries/useUserProfile.ts",
+          "frontend/src/pages/ActivityPage.tsx"
         ]
       }
     ]
@@ -89,19 +71,16 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
-    "frontend/src/components/layout/AppShell.tsx",
-    "frontend/src/components/layout/CyberBackground.tsx",
-    "frontend/src/hooks/queries/useCoinsDirectory.ts",
-    "frontend/src/hooks/queries/useOrderBook.ts",
-    "frontend/src/hooks/queries/useOrders.ts",
-    "frontend/src/index.css",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/trends/MarketCapSparkline.tsx",
+    "frontend/src/components/trends/MarketCapTrendDialog.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/queries/useMarketCapTrend.ts",
+    "frontend/src/hooks/queries/useUserProfile.ts",
     "frontend/src/pages/ActivityPage.tsx",
-    "frontend/src/pages/CoinDetailPage.tsx",
-    "frontend/src/pages/CoinsPage.tsx",
-    "frontend/src/pages/LandingPage.tsx",
-    "frontend/src/utils/currency.ts",
-    "frontend/tailwind.config.js",
+    "frontend/src/utils/trendChart.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

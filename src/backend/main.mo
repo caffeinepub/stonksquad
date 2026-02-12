@@ -2,9 +2,9 @@ import Map "mo:core/Map";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
-import Float "mo:core/Float";
-import Iter "mo:core/Iter";
 import List "mo:core/List";
+import Iter "mo:core/Iter";
+import Float "mo:core/Float";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Array "mo:core/Array";
@@ -16,8 +16,7 @@ import AccessControl "authorization/access-control";
 import Stripe "stripe/stripe";
 import OutCall "http-outcalls/outcall";
 
-// Removed with-clause referencing migration.
-
+// Persistent Market Cap Tracking
 actor {
   // Extend access control
   let accessControlState = AccessControl.initState();
@@ -86,24 +85,29 @@ actor {
     amountCents : Nat;
   };
 
-  // In-memory StripeSessions (not persistent) - now tracks ownership
-  let stripeSessions = Map.empty<Text, StripeSession>();
+  type MarketCapTrendPoint = {
+    timestamp : Time.Time;
+    marketCap : Nat;
+  };
 
-  // Persisted balances
+  // Persistent Maps
   let coins = Map.empty<Text, Coin>();
   let users = Map.empty<Principal, UserProfile>();
   let sqdBalances = Map.empty<Principal, Balance>();
   let coinBalances = Map.empty<Principal, Map.Map<Text, Balance>>();
   let orders = Map.empty<Nat, Order>();
   let usdcBalances = Map.empty<Principal, Balance>();
-  var nextOrderId = 0;
+  let marketCapTrends = Map.empty<Principal, List.List<MarketCapTrendPoint>>();
 
   // Constants
   let INITIAL_SQD_AIRDROP = 1000;
   let INITIAL_COIN_SUPPLY = 10000;
   let DEFAULT_ORDER_BOOK_DEPTH = 10;
 
-  // Helper Functions
+  // Stripe Sessions (not persistent)
+  let stripeSessions = Map.empty<Text, StripeSession>();
+  var nextOrderId = 0;
+
   func getOrCreateCoin(caller : Principal) : Coin {
     switch (users.get(caller)) {
       case (null) { Runtime.trap("User profile must exist to create coin") };
@@ -208,10 +212,28 @@ actor {
     coins.values().toArray().filter(func(coin) { coin.owner == creator });
   };
 
-  // Core Functions
+  func updateMarketCapTrend(user : Principal) {
+    let currentCap = getTotalMarketCap(user);
+    let newPoint : MarketCapTrendPoint = {
+      timestamp = Time.now();
+      marketCap = currentCap;
+    };
+
+    let trend = switch (marketCapTrends.get(user)) {
+      case (null) { List.empty<MarketCapTrendPoint>() };
+      case (?existingTrend) { existingTrend };
+    };
+
+    trend.add(newPoint);
+    marketCapTrends.add(user, trend);
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    // No authorization check - anyone can query their own profile (returns null for guests)
     users.get(caller);
+  };
+
+  public query func getPublicUserProfile(user : Principal) : async ?UserProfile {
+    users.get(user);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
@@ -331,6 +353,9 @@ actor {
 
     orders.add(orderId, newOrder);
     nextOrderId += 1;
+
+    // Update market cap trend after new order
+    updateMarketCapTrend(caller);
     orderId;
   };
 
@@ -411,7 +436,13 @@ actor {
     resultList.toArray();
   };
 
-  // Stripe integration
+  public query func getMarketCapTrend(user : Principal) : async [MarketCapTrendPoint] {
+    switch (marketCapTrends.get(user)) {
+      case (null) { [] };
+      case (?trend) { trend.toArray() };
+    };
+  };
+
   var configuration : ?Stripe.StripeConfiguration = null;
 
   public query func isStripeConfigured() : async Bool {
@@ -548,5 +579,5 @@ actor {
       };
     };
   };
-};
 
+};

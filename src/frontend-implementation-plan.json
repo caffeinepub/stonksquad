@@ -1,114 +1,63 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Trading/alpha theme refresh, new background, and hardened coin flows (frontend-only)",
+  "title": "Per-user market cap trend graph UI on Activity leaderboard",
   "requirements": [
     {
-      "id": "REQ-42",
-      "summary": "Shift global UI styling from neon cyberpunk to a trading/alpha terminal aesthetic while preserving all existing routes and behaviors.",
+      "id": "REQ-4",
+      "summary": "Add per-user trend visualization on the Activity leaderboard with a detailed graph view and robust empty/loading states using existing Tailwind/shadcn components.",
       "acceptanceCriteria": [
-        "All existing pages/routes still render and function (auth gating, navigation, trading/order placement, Stripe deposit/withdraw flows, leaderboard).",
-        "Global theme variables in frontend/src/index.css are updated away from neon/cyberpunk styling to a trading/alpha palette and typography, and the new tokens are used by existing shadcn/Tailwind classes.",
-        "Cyberpunk-specific utility styling (e.g., heavy neon glows/borders) is either toned down or replaced with trading/terminal-like treatments while keeping layout and component structure intact."
+        "Activity page displays an inline mini trend visualization (sparkline) or a clear ‘View trend’ action per leaderboard row.",
+        "Clicking/tapping a user’s trend opens a detailed view (e.g., dialog/drawer/section) that renders the full time-series graph with labeled axes/values (English labels).",
+        "The graph renders correctly for empty/short series (0–1 point) with a clear English empty-state message.",
+        "UI uses existing Tailwind/Shadcn components (composed, not modifying immutable UI source files)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Update global design tokens (OKLCH colors, radii) to a dark neutral trading/terminal palette with restrained accents; adjust cyberpunk utility classes (e.g., cyber-glow/cyber-border and rank glow utilities) to be subtle, terminal-like shadows/borders instead of heavy neon."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Adjust typography defaults to better match a trading/alpha aesthetic (e.g., modern sans + readable mono for numbers), keeping existing Tailwind token wiring intact."
-        },
-        {
-          "path": "frontend/src/components/layout/AppShell.tsx",
-          "operation": "modify",
-          "description": "Replace the most cyberpunk-leaning shell styling touches (e.g., overly strong glow emphasis) with the updated trading/alpha styling while keeping navigation, auth/logout, and layout structure identical."
-        },
-        {
-          "path": "frontend/src/pages/LandingPage.tsx",
-          "operation": "modify",
-          "description": "Tune landing page styling to the new trading/alpha look (headers/cards/hero treatments) while preserving copy in English, login flow behavior, and existing layout sections."
-        }
-      ]
-    },
-    {
-      "id": "REQ-43",
-      "summary": "Replace the cyberpunk background with a new fullscreen trading/alpha background across public and authenticated layouts using the shared background component.",
-      "acceptanceCriteria": [
-        "Landing page and authenticated AppShell both use the updated background component and no longer reference a cyberpunk-only background treatment.",
-        "Background remains fixed/fullscreen with layered overlay so text contrast remains strong on all pages.",
-        "No regressions in scroll behavior, z-index layering, or clickability of UI due to the background layer."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/public/assets/generated/alpha-bg.dim_1920x1080.png",
+          "path": "frontend/src/components/trends/MarketCapSparkline.tsx",
           "operation": "create",
-          "description": "Add the required generated asset as a static frontend image: frontend/public/assets/generated/alpha-bg.dim_1920x1080.png."
+          "description": "Create a lightweight in-app SVG sparkline component for market cap trend mini-visualizations (no third-party chart libs). Accepts a time-series and renders a compact line with sensible handling for 0–1 points. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/layout/CyberBackground.tsx",
-          "operation": "modify",
-          "description": "Update the shared background component to use the new generated image at frontend/public/assets/generated/alpha-bg.dim_1920x1080.png and apply a trading/terminal-style overlay (fixed, fullscreen, layered) that preserves readability and clickability."
-        },
-        {
-          "path": "frontend/src/components/layout/AppShell.tsx",
-          "operation": "modify",
-          "description": "Ensure the authenticated layout uses the updated shared background component without extra wrapper opacity layers that could break layering/z-index or reduce contrast."
-        },
-        {
-          "path": "frontend/src/pages/LandingPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the public landing layout uses the updated shared background component consistently and that the overlay maintains strong text contrast."
-        }
-      ]
-    },
-    {
-      "id": "REQ-46",
-      "summary": "Harden coin discovery, symbol routing, coin detail loading, order book display, and order placement UX with robust empty/error handling (English text).",
-      "acceptanceCriteria": [
-        "Coins/People page navigation consistently routes to the correct Coin Detail page for a selected user/asset symbol.",
-        "Coin Detail page shows a clear English empty state when there are no orders yet, and does not imply a non-zero market cap/price when there is no price-discovery data.",
-        "Placing buy/sell orders continues to work with existing validations; failures surface as non-crashing UI error states rather than silent failure.",
-        "Activity/Leaderboard renders 0 market cap correctly for creators with no price-discovery data (no NaN, no negative values, no unexpected default)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/queries/useCoinsDirectory.ts",
+          "path": "frontend/src/components/trends/MarketCapTrendDialog.tsx",
           "operation": "create",
-          "description": "Create React Query hooks to (1) build a coin directory from backend capabilities (creator coins + symbols) and (2) resolve a coin/creator/profile by symbol for Coin Detail, with safe handling for missing/null backend data."
+          "description": "Create a detailed trend view component that composes existing shadcn-ui primitives (e.g., Dialog/Drawer, Card, Skeleton, Button) to show a larger SVG line chart with English axis/value labels, and an English empty-state message for 0–1 points. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/CoinsPage.tsx",
-          "operation": "modify",
-          "description": "Switch coin discovery/listing to use the new directory hook so listings are based on actual backend coin symbols (not derived-only symbols); add clear English empty/error states when no coins/profiles can be resolved; ensure navigation uses the resolved symbol."
-        },
-        {
-          "path": "frontend/src/pages/CoinDetailPage.tsx",
-          "operation": "modify",
-          "description": "Update coin detail loading to resolve the coin and creator via symbol (using the new hook), display an English empty state when there are no orders, and add a non-misleading price-discovery indicator (show 0 when no qualifying data) without breaking order placement."
-        },
-        {
-          "path": "frontend/src/hooks/queries/useOrderBook.ts",
-          "operation": "modify",
-          "description": "Improve robustness by ensuring symbol is normalized/validated before querying and that query errors are surfaced to the UI layer (via React Query error state) without crashes."
-        },
-        {
-          "path": "frontend/src/hooks/queries/useOrders.ts",
-          "operation": "modify",
-          "description": "Ensure order placement failures propagate meaningful errors (no silent failures) and invalidate the correct cached queries for the affected symbol so the UI refreshes reliably after successful placements."
+          "path": "frontend/src/utils/trendChart.ts",
+          "operation": "create",
+          "description": "Add shared chart utilities for scaling timestamps/values to SVG coordinates, formatting axis labels, and normalizing short/empty series for consistent rendering in sparkline and detailed chart."
         },
         {
           "path": "frontend/src/pages/ActivityPage.tsx",
           "operation": "modify",
-          "description": "Render creator market caps (bigint) safely (including 0) without NaN/negative/default artifacts; avoid unsafe Number conversions for display formatting; keep all user-facing text in English."
+          "description": "Update the leaderboard row UI to include either an inline MarketCapSparkline or a clear 'View trend' action per row, and wire a click/tap to open MarketCapTrendDialog for that row. Include loading Skeletons and simple English error/empty text for trend data, and ensure rendering remains stable for empty/short series. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Add React Query hooks for per-user trend series and public profile lookup, and update Activity leaderboard rows to use public profile data to avoid unauthorized traps.",
+      "acceptanceCriteria": [
+        "A new query hook fetches a user’s trend series from the backend and is used by the Activity leaderboard row/chart UI.",
+        "The leaderboard’s profile lookup no longer calls the restricted getUserProfile method; it uses the new public profile query.",
+        "All new queries include loading and error states consistent with existing patterns (e.g., Skeletons and simple English error text)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/queries/useMarketCapTrend.ts",
+          "operation": "create",
+          "description": "Add a React Query hook to fetch a user's market cap trend series via the backend actor (getMarketCapTrend) keyed by principal, with enabled gating on actor readiness and simple retry behavior consistent with existing hooks."
         },
         {
-          "path": "frontend/src/utils/currency.ts",
+          "path": "frontend/src/hooks/queries/useUserProfile.ts",
           "operation": "modify",
-          "description": "Add a bigint-safe formatter for large integer market-cap values (including 0) for consistent display in Activity/Leaderboard (and optionally other pages) without relying on lossy Number conversion."
+          "description": "Update the per-user profile query hook to use the new public profile backend capability (getPublicUserProfile) instead of the restricted method, and add/adjust loading/error behavior consistent with existing patterns. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/ActivityPage.tsx",
+          "operation": "modify",
+          "description": "Wire Activity leaderboard rows to use the updated public profile hook and the new useMarketCapTrend hook, showing Skeletons while loading and simple English error text when a query fails, without breaking existing leaderboard rendering."
         }
       ]
     }

@@ -30,7 +30,7 @@ export function useGetUserProfile(principal: Principal) {
     queryKey: ['userProfile', principal.toString()],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getUserProfile(principal);
+      return actor.getPublicUserProfile(principal);
     },
     enabled: !!actor && !actorFetching && !!principal,
     retry: false,

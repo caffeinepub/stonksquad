@@ -1,28 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trophy, TrendingUp, Crown, Medal, Award } from 'lucide-react';
+import { Trophy, Crown, Medal, Award } from 'lucide-react';
 import { useGetLeaderboard, type LeaderboardEntry } from '../hooks/queries/useLeaderboard';
 import { useGetUserProfile } from '../hooks/queries/useUserProfile';
+import { useGetMarketCapTrend } from '../hooks/queries/useMarketCapTrend';
 import { RankBadge } from '../components/rank/RankBadge';
 import { getRankTier } from '../utils/rank';
 import { formatMarketCap } from '../utils/currency';
+import { MarketCapSparkline } from '../components/trends/MarketCapSparkline';
+import { MarketCapTrendDialog } from '../components/trends/MarketCapTrendDialog';
 
 export default function ActivityPage() {
   const { data: leaderboard, isLoading } = useGetLeaderboard();
-
-  const getRankIcon = (position: number) => {
-    switch (position) {
-      case 1:
-        return <Crown className="h-5 w-5 text-yellow-500" />;
-      case 2:
-        return <Medal className="h-5 w-5 text-gray-400" />;
-      case 3:
-        return <Award className="h-5 w-5 text-amber-600" />;
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -59,6 +49,7 @@ export default function ActivityPage() {
                   <TableHead className="font-mono">Creator</TableHead>
                   <TableHead className="font-mono">Tier</TableHead>
                   <TableHead className="font-mono text-right">Market Cap</TableHead>
+                  <TableHead className="font-mono text-center">Trend</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -80,7 +71,9 @@ export default function ActivityPage() {
 }
 
 function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
-  const { data: profile } = useGetUserProfile(entry.principal);
+  const { data: profile, isLoading: profileLoading } = useGetUserProfile(entry.principal);
+  const { data: trendData, isLoading: trendLoading } = useGetMarketCapTrend(entry.principal);
+  
   // Convert bigint to number for rank tier calculation
   const rankTier = getRankTier(Number(entry.creatorMarketCap));
 
@@ -119,22 +112,41 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
         </div>
       </TableCell>
       <TableCell className="font-mono">
-        {profile ? (
+        {profileLoading ? (
+          <Skeleton className="h-10 w-32" />
+        ) : profile ? (
           <div>
             <div className="font-bold">{profile.displayName}</div>
             <div className="text-sm text-muted-foreground">@{profile.username}</div>
           </div>
         ) : (
-          <Skeleton className="h-10 w-32" />
+          <div className="text-muted-foreground text-sm">Unknown User</div>
         )}
       </TableCell>
       <TableCell>
         <RankBadge tier={rankTier} variant="compact" />
       </TableCell>
       <TableCell className="font-mono font-bold text-right">
-        <div className="flex items-center justify-end gap-2">
-          <TrendingUp className="h-4 w-4 text-success" />
-          {formatMarketCap(entry.creatorMarketCap)}
+        {formatMarketCap(entry.creatorMarketCap)}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center justify-center gap-2">
+          {trendLoading ? (
+            <Skeleton className="h-8 w-20" />
+          ) : trendData && trendData.length > 0 ? (
+            <MarketCapTrendDialog
+              data={trendData}
+              isLoading={trendLoading}
+              userName={profile?.displayName || 'User'}
+              trigger={
+                <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <MarketCapSparkline data={trendData} width={80} height={30} />
+                </button>
+              }
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground font-mono">No data</span>
+          )}
         </div>
       </TableCell>
     </TableRow>

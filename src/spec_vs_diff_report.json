@@ -1,51 +1,97 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T23:00:20.918Z",
-  "summary": "Frontend theme tokens and background were updated to a trading/alpha aesthetic, with new layout styling and several coin flow robustness improvements (directory resolution, symbol normalization, empty/error states). Backend changes shown are truncated and do not provide evidence for the required market-cap fair-launch and creator market-cap aggregation fixes.",
+  "generatedAt": "2026-02-12T20:51:51.135Z",
+  "summary": "Frontend adds trend sparkline + dialog UI on Activity leaderboard and a React Query hook to fetch a per-user market cap trend; user profile hook is updated to call a new public-profile method name. Backend shows new trend-point type and a per-user trend map, but the diff summary does not provide evidence of the required new public query APIs or of trend updates being appended on order placement / profile creation.",
   "missing_requirements": [
     {
-      "id": "REQ-44",
-      "requirement": "Ensure fair-launch behavior by making market cap start at exactly 0 for every newly created asset until there is real market activity establishing a price (price=0 => market cap=0 when no price-discovery data).",
-      "reason": "The diff summary for backend/main.mo does not show any market-cap/price-discovery logic changes; only coin creation and state/type definitions are visible in the provided truncation.",
+      "id": "REQ-1",
+      "requirement": "Add a backend public query API that accepts a target user Principal and returns an ordered (timestamp, value) time-series, callable by any caller, sorted ascending, and capped/limited.",
+      "reason": "Frontend calls `actor.getMarketCapTrend(principal)`, but the backend diff excerpt does not show any new public query method implementation, nor any explicit sorting/limiting behavior.",
       "evidence": [
-        "backend/main.mo (truncated in diff summary)"
+        "frontend/src/hooks/queries/useMarketCapTrend.ts",
+        "backend/main.mo (truncated excerpt shows type+storage only; no `public query func getMarketCapTrend...` visible)"
       ]
     },
     {
-      "id": "REQ-45",
-      "requirement": "Fix backend creator market-cap aggregation correctness (sum of each created coin’s market cap = current price * totalSupply) and ensure ranking iterates over actual users/creators, keeping metric as creator market cap.",
-      "reason": "The diff summary does not include any visible implementation of getCreatorCapRanking / getCreatorCoinsWithMarketCaps aggregation logic or iteration source changes; backend changes are truncated before any such functions are shown.",
+      "id": "REQ-2",
+      "requirement": "Track and store creator market cap trend points per user over time, appending on events that can change market cap (at minimum order placement) and creating an initial 0 point at profile creation, without changing existing API return types.",
+      "reason": "Backend excerpt shows a `marketCapTrends` map and `MarketCapTrendPoint` type, but does not show any logic that appends points on order placement or initializes a 0-value point during profile creation.",
       "evidence": [
-        "backend/main.mo (truncated in diff summary)"
+        "backend/main.mo (shows `MarketCapTrendPoint` and `marketCapTrends` storage, but no update/init logic visible due to truncation)"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Add a backend public query API to fetch a user's public profile data by Principal (or null), callable by any caller, without modifying existing restricted profile methods.",
+      "reason": "Frontend is updated to call `actor.getPublicUserProfile(principal)`, but the backend diff excerpt does not show a new `getPublicUserProfile` query method or confirm that existing restricted methods are unchanged.",
+      "evidence": [
+        "frontend/src/hooks/queries/useUserProfile.ts",
+        "backend/main.mo (truncated excerpt does not show `getPublicUserProfile` implementation)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added an anti-impersonation/real-name verification checkbox requirement in the profile creation modal.",
-      "reason": "The BuildRequest does not request new profile-creation verification/checkbox behavior; it focuses on theme/background changes and market-cap/coin-flow correctness without adding new product requirements.",
+      "description": "Added Deposit/Withdraw routes and related navigation updates.",
+      "reason": "Not requested by the BuildRequest (trend graph + public APIs only).",
       "evidence": [
-        "frontend-file-summaries.txt (\"ProfileSetupModal\" summary: \"name verification checkbox requiring users to confirm their real name\")"
+        "frontend-file-summaries.txt (App.tsx, AppShell.tsx mention new Deposit and Withdraw routes/menu items)"
+      ]
+    },
+    {
+      "description": "Large-scale UI/branding/theme changes across multiple pages (new hero text, terminal/cyberpunk styling, global palette/font/radius/animations).",
+      "reason": "Not requested; BuildRequest focuses on trend graph UI and backend APIs, and cautions about immutable UI paths (no evidence those immutable paths were edited, but broad restyling is still unrequested scope).",
+      "evidence": [
+        "frontend-file-summaries.txt (LandingPage.tsx, DashboardPage.tsx, index.css, tailwind.config.js describe broad styling changes)"
+      ]
+    },
+    {
+      "description": "Coins directory and coin detail behavior changes (new coin discovery hook, route path changes, price-discovery indicators, etc.).",
+      "reason": "Not requested by any REQ; unrelated to adding market cap trend graph and public profile/trend APIs.",
+      "evidence": [
+        "frontend-file-summaries.txt (CoinsPage.tsx, CoinDetailPage.tsx summaries)"
+      ]
+    },
+    {
+      "description": "Profile creation modal adds a 'real name verification' checkbox and related UX changes.",
+      "reason": "Not requested by the BuildRequest; unrelated to trend graph feature set.",
+      "evidence": [
+        "frontend-file-summaries.txt (ProfileSetupModal.tsx summary)"
+      ]
+    },
+    {
+      "description": "Order book query adds polling interval and other robustness/error surfacing changes.",
+      "reason": "Not requested; non-goals/requirements do not mention changing order book polling behavior.",
+      "evidence": [
+        "frontend-file-summaries.txt (useOrderBook.ts summary)"
+      ]
+    },
+    {
+      "description": "Added Stripe.js script and updated HTML meta/favicons.",
+      "reason": "Not requested as part of the trend graph/public APIs work.",
+      "evidence": [
+        "frontend-file-summaries.txt (index.html summary)"
+      ]
+    },
+    {
+      "description": "Introduced stubbed React Query hooks for fetching all user profiles and fetching profile by symbol that return empty/null due to missing backend methods.",
+      "reason": "Not requested by REQ-5 (which only asks for hooks for per-user trend series and public profile by Principal, plus updating leaderboard lookup).",
+      "evidence": [
+        "frontend/src/hooks/queries/useUserProfile.ts"
       ]
     }
   ],
-  "confidence": 0.68,
+  "confidence": 0.66,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/layout/AppShell.tsx",
-    "frontend/src/components/layout/CyberBackground.tsx",
-    "frontend/src/hooks/queries/useCoinsDirectory.ts",
-    "frontend/src/hooks/queries/useOrderBook.ts",
-    "frontend/src/hooks/queries/useOrders.ts",
-    "frontend/src/index.css",
+    "frontend/src/components/trends/MarketCapSparkline.tsx",
+    "frontend/src/components/trends/MarketCapTrendDialog.tsx",
+    "frontend/src/hooks/queries/useMarketCapTrend.ts",
+    "frontend/src/hooks/queries/useUserProfile.ts",
     "frontend/src/pages/ActivityPage.tsx",
-    "frontend/src/pages/CoinDetailPage.tsx",
-    "frontend/src/pages/CoinsPage.tsx",
-    "frontend/src/pages/LandingPage.tsx",
-    "frontend/src/utils/currency.ts",
-    "frontend/tailwind.config.js",
+    "frontend/src/utils/trendChart.ts",
     "project_state.json"
   ]
 }

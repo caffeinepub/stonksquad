@@ -89,11 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
 export interface Coin {
     owner: Principal;
     metadata?: string;
@@ -108,6 +103,28 @@ export interface TransformationOutput {
     headers: Array<http_header>;
 }
 export type Time = bigint;
+export interface MarketCapTrendPoint {
+    marketCap: bigint;
+    timestamp: Time;
+}
+export interface Order {
+    coinSymbol: string;
+    side: OrderSide;
+    user: Principal;
+    orderId: bigint;
+    timestamp: Time;
+    quantity: bigint;
+    price: number;
+}
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export interface ShoppingItem {
     productName: string;
     currency: string;
@@ -135,23 +152,10 @@ export interface StripeConfiguration {
     allowedCountries: Array<string>;
     secretKey: string;
 }
-export interface Order {
-    coinSymbol: string;
-    side: OrderSide;
-    user: Principal;
-    orderId: bigint;
-    timestamp: Time;
-    quantity: bigint;
-    price: number;
-}
 export interface UserProfile {
     bio: string;
     username: string;
     displayName: string;
-}
-export interface http_header {
-    value: string;
-    name: string;
 }
 export enum OrderSide {
     buy = "buy",
@@ -175,7 +179,9 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getCreatorCapRanking(): Promise<Array<[Principal, bigint]>>;
     getCreatorCoinsWithMarketCaps(): Promise<Array<[Principal, Array<Coin>, bigint]>>;
+    getMarketCapTrend(user: Principal): Promise<Array<MarketCapTrendPoint>>;
     getOrderBook(symbol: string, side: OrderSide, depth: bigint | null): Promise<Array<Order>>;
+    getPublicUserProfile(user: Principal): Promise<UserProfile | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
@@ -356,6 +362,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getMarketCapTrend(arg0: Principal): Promise<Array<MarketCapTrendPoint>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMarketCapTrend(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMarketCapTrend(arg0);
+            return result;
+        }
+    }
     async getOrderBook(arg0: string, arg1: OrderSide, arg2: bigint | null): Promise<Array<Order>> {
         if (this.processError) {
             try {
@@ -368,6 +388,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getOrderBook(arg0, to_candid_OrderSide_n12(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n14(this._uploadFile, this._downloadFile, arg2));
             return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getPublicUserProfile(arg0: Principal): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublicUserProfile(arg0);
+                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublicUserProfile(arg0);
+            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async getStripeSessionStatus(arg0: string): Promise<StripeSessionStatus> {
