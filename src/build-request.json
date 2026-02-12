@@ -1,110 +1,140 @@
 {
   "kind": "build_request",
-  "title": "Add per-user trend graph (public) for creator market cap over time",
+  "title": "Embed per-asset price chart on trade screens and simplify trading to market-only one-click flow",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add a backend API that returns a public per-user time-series suitable for graphing a trend over time, so any viewer can request the trend for any specified user principal.",
-      "target": "backend",
+      "text": "Add an embedded price chart to the trade screen for every asset/ticker (the coin detail/trade page), showing recent historical price data for the currently selected symbol without requiring navigation away from the trade screen.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4",
+          "msg-10"
         ],
         "quotes": [
-          "can you make a graph for every user so people can see trend"
+          "Add a stock/asset price chart (e.g., candlestick or line graph) directly on every trade screen/page.",
+          "Users should see real-time or recent historical price data for the selected ticker/symbol right where they make buy/sell decisions—no need to navigate away."
         ]
       },
       "acceptanceCriteria": [
-        "Backend exposes a new public query method that accepts a target user Principal and returns an ordered list of (timestamp, value) points.",
-        "The method is callable by any caller (including non-admins) without trapping for authorization reasons.",
-        "Returned series is sorted by timestamp ascending and capped/limited to prevent unbounded responses (e.g., optional limit parameter or a fixed maximum)."
+        "On the asset trade screen (frontend/src/pages/CoinDetailPage.tsx), a visible chart is rendered for the selected symbol.",
+        "The chart displays recent historical price points for that symbol and updates automatically on an interval (near-real-time).",
+        "If there is insufficient data to chart (e.g., no orders), show a clear English empty-state message instead of crashing."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Track and store creator market cap trend points per user over time, updating the time-series whenever an event occurs that can change creator market cap (at minimum: when any order is placed).",
+      "text": "Implement a backend query API to provide recent historical price data for a given symbol suitable for charting (e.g., an array of time-series points derived from recent orders for that symbol).",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4",
+          "msg-10"
         ],
         "quotes": [
-          "can you make a graph for every user so people can see trend"
+          "Add a stock/asset price chart (e.g., candlestick or line graph) directly on every trade screen/page.",
+          "Users should see real-time or recent historical price data for the selected ticker/symbol right where they make buy/sell decisions—no need to navigate away."
         ]
       },
       "acceptanceCriteria": [
-        "When an order is placed, the backend appends a new trend point for the relevant creator(s) so the trend series changes over time.",
-        "New users start with an initial trend point representing a fair-launch starting value (0) at profile creation time.",
-        "The trend tracking does not break existing order placement behavior and does not change existing return types for current APIs."
+        "Backend exposes a query method that accepts a symbol and returns a time-ordered list of price points (timestamp + price) based on recent orders for that symbol.",
+        "Returned data is deterministic and does not require any external API/service.",
+        "Invalid/unknown symbols return a clear error or an empty list (but do not trap the canister unexpectedly for normal user flows)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Add a public backend API to fetch a user's public profile data for display in public contexts (e.g., leaderboard rows), without requiring caller==user or admin permissions.",
-      "target": "backend",
+      "text": "Simplify the buy/sell UI on the trade screen to market orders only: remove limit-order inputs (price and quantity) and replace them with a single amount-to-spend input (in USD/stablecoin) plus a clear estimated execution preview and one prominent action button per side (\"Buy Market\" / \"Sell Market\").",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4",
+          "msg-10"
         ],
         "quotes": [
-          "can you make a graph for every user so people can see trend"
+          "Simplify the buy/sell interface — remove limit orders entirely and default to market orders only.",
+          "Replace it with a cleaner, one-click flow:  Enter the amount to spend (in USD/stablecoin) .",
+          "Show a clear preview of the estimated execution (e.g., \"Buying ~X shares at current market price ≈ $Y\").",
+          "One prominent \"Buy Market\" or \"Sell Market\" button."
         ]
       },
       "acceptanceCriteria": [
-        "Backend exposes a new public query method that returns a user’s public profile data by Principal (or returns null if missing).",
-        "The new public profile query is callable by any caller without trapping for authorization.",
-        "Existing restricted profile method(s) remain unchanged (no widening of access on the existing protected method)."
+        "frontend/src/pages/CoinDetailPage.tsx no longer shows price and quantity inputs for placing orders.",
+        "The trade form for Buy and Sell each includes: (1) a single numeric input for amount (USD/stablecoin), (2) a live preview of the estimated execution, and (3) one prominent button labeled exactly \"Buy Market\" or \"Sell Market\" (English).",
+        "The preview clearly states the estimated quantity and the market price used for the estimate (English user-facing copy).",
+        "Buttons are disabled and an English validation message is shown when the amount is missing/invalid or when a market price cannot be determined."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Implement a frontend trend graph UI for each user so people can view trend history from the leaderboard (Activity page).",
-      "target": "frontend",
+      "text": "Add backend support for placing market orders from an amount-to-spend flow: given symbol + side + amount (in USD/stablecoin), determine a market price from the current order book and compute the resulting quantity, then place the order using existing authorization and balance checks.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4",
+          "msg-10"
         ],
         "quotes": [
-          "can you make a graph for every user so people can see trend"
+          "Simplify the buy/sell interface — remove limit orders entirely and default to market orders only.",
+          "Enter the amount to spend (in USD/stablecoin) .",
+          "Show a clear preview of the estimated execution"
         ]
       },
       "acceptanceCriteria": [
-        "Activity page displays an inline mini trend visualization (sparkline) or a clear ‘View trend’ action per leaderboard row.",
-        "Clicking/tapping a user’s trend opens a detailed view (e.g., dialog/drawer/section) that renders the full time-series graph with labeled axes/values (English labels).",
-        "The graph renders correctly for empty/short series (0–1 point) with a clear English empty-state message.",
-        "UI uses existing Tailwind/Shadcn components (composed, not modifying immutable UI source files)."
+        "Backend exposes a shared method for placing a market buy/sell using an amount input (USD/stablecoin).",
+        "Market price selection is based on current order book for the symbol (e.g., best available opposite-side price); if no market price is available, the method returns a clear error for the UI to display.",
+        "Quantity is computed from amount and chosen market price, and existing balance/authorization rules are enforced.",
+        "Frontend uses this market-order method from the new Buy Market / Sell Market buttons (and does not call the old limit-order path from the simplified UI)."
       ]
     },
     {
       "id": "REQ-5",
-      "text": "Add React Query hooks to fetch per-user trend series and public profile data, and update the leaderboard row implementation to use the new public profile API (avoiding unauthorized traps).",
-      "target": "frontend",
+      "text": "Remove or reset the arbitrary starting \"your assets\" balance of 10,000 so new and existing users no longer start with that default asset balance.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-5"
         ],
         "quotes": [
-          "can you make a graph for every user so people can see trend"
+          "Remove or reset the arbitrary starting 'your assets' balance of 10,000"
         ]
       },
       "acceptanceCriteria": [
-        "A new query hook fetches a user’s trend series from the backend and is used by the Activity leaderboard row/chart UI.",
-        "The leaderboard’s profile lookup no longer calls the restricted getUserProfile method; it uses the new public profile query.",
-        "All new queries include loading and error states consistent with existing patterns (e.g., Skeletons and simple English error text)."
+        "Newly created user profiles no longer receive a default starting balance of 10,000 units of their own asset.",
+        "Existing persisted state is migrated so users no longer show a default starting balance of 10,000 units of their own asset on the dashboard and trade screens.",
+        "A state migration is added (backend/migration.mo) if needed to update existing on-chain state without losing unrelated user data."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Update the trade screen layout and styling to integrate the new chart and simplified market-order widgets into a cohesive, consistent visual theme aligned with the existing terminal/cyber styling (English UI labels).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-10"
+        ],
+        "quotes": [
+          "This makes it faster and less intimidating, especially for casual or new traders."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The chart is visually integrated on the trade screen (not hidden behind a dialog) and does not interfere with core trade actions.",
+        "The simplified buy/sell UI is clearly scannable and reduces visual complexity compared to the prior limit-order form.",
+        "All user-facing text introduced/changed by this request is in English."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
-    "Do not edit files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
-    "Use English for all user-facing UI text."
+    "Backend must remain a single Motoko actor in backend/main.mo; only add backend/migration.mo if required for upgrading existing state.",
+    "Do not edit frontend immutable paths (frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui).",
+    "Do not rely on external databases or third-party market data APIs; derive chart and market pricing from canister-stored data (orders/order book)."
   ],
   "nonGoals": [
-    "Do not add real-time updates (no websockets/streaming).",
-    "Do not add third-party charting libraries unless already present; prefer a lightweight in-app SVG/canvas chart component.",
-    "Do not change the leaderboard ranking metric (it remains based on creator market cap).",
-    "Do not implement external analytics or external database storage."
+    "Implement a full matching engine / trade execution system beyond the existing order placement model.",
+    "Integrate real external stock/crypto price feeds or websockets-based real-time streaming.",
+    "Add limit orders back into the UI."
   ],
   "imageRequirements": {
     "required": [],

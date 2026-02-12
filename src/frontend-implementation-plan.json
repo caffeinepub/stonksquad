@@ -1,63 +1,69 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Per-user market cap trend graph UI on Activity leaderboard",
+  "title": "Trade screen chart embed + market-only one-click trading UI",
   "requirements": [
     {
-      "id": "REQ-4",
-      "summary": "Add per-user trend visualization on the Activity leaderboard with a detailed graph view and robust empty/loading states using existing Tailwind/shadcn components.",
+      "id": "REQ-1",
+      "summary": "Embed a per-asset price chart on the coin trade screen, driven by recent on-chain price history and auto-updating on an interval.",
       "acceptanceCriteria": [
-        "Activity page displays an inline mini trend visualization (sparkline) or a clear ‘View trend’ action per leaderboard row.",
-        "Clicking/tapping a user’s trend opens a detailed view (e.g., dialog/drawer/section) that renders the full time-series graph with labeled axes/values (English labels).",
-        "The graph renders correctly for empty/short series (0–1 point) with a clear English empty-state message.",
-        "UI uses existing Tailwind/Shadcn components (composed, not modifying immutable UI source files)."
+        "On the asset trade screen (frontend/src/pages/CoinDetailPage.tsx), a visible chart is rendered for the selected symbol.",
+        "The chart displays recent historical price points for that symbol and updates automatically on an interval (near-real-time).",
+        "If there is insufficient data to chart (e.g., no orders), show a clear English empty-state message instead of crashing."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/trends/MarketCapSparkline.tsx",
+          "path": "frontend/src/hooks/queries/usePriceHistory.ts",
           "operation": "create",
-          "description": "Create a lightweight in-app SVG sparkline component for market cap trend mini-visualizations (no third-party chart libs). Accepts a time-series and renders a compact line with sensible handling for 0–1 points. Verify the component's usage instructions before implementing."
+          "description": "Create a React Query hook that fetches recent price history for a symbol via the existing backend capability (getPriceHistory) and refetches on an interval for near-real-time updates. Handle missing/invalid symbols safely and return empty data without crashing."
         },
         {
-          "path": "frontend/src/components/trends/MarketCapTrendDialog.tsx",
+          "path": "frontend/src/components/trading/PriceHistoryChart.tsx",
           "operation": "create",
-          "description": "Create a detailed trend view component that composes existing shadcn-ui primitives (e.g., Dialog/Drawer, Card, Skeleton, Button) to show a larger SVG line chart with English axis/value labels, and an English empty-state message for 0–1 points. Verify the component's usage instructions before implementing."
+          "description": "Create a lightweight SVG line-chart component for PricePoint[] rendering (time-ordered), including an English empty-state for insufficient data and basic loading handling. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/utils/trendChart.ts",
-          "operation": "create",
-          "description": "Add shared chart utilities for scaling timestamps/values to SVG coordinates, formatting axis labels, and normalizing short/empty series for consistent rendering in sparkline and detailed chart."
-        },
-        {
-          "path": "frontend/src/pages/ActivityPage.tsx",
+          "path": "frontend/src/pages/CoinDetailPage.tsx",
           "operation": "modify",
-          "description": "Update the leaderboard row UI to include either an inline MarketCapSparkline or a clear 'View trend' action per row, and wire a click/tap to open MarketCapTrendDialog for that row. Include loading Skeletons and simple English error/empty text for trend data, and ensure rendering remains stable for empty/short series. Verify the component's usage instructions before implementing."
+          "description": "Wire the new price history hook and PriceHistoryChart into the trade screen so the currently selected symbol shows an embedded chart (not a dialog). Ensure the chart refreshes on an interval and displays an English empty-state when no/insufficient data is returned. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-5",
-      "summary": "Add React Query hooks for per-user trend series and public profile lookup, and update Activity leaderboard rows to use public profile data to avoid unauthorized traps.",
+      "id": "REQ-3",
+      "summary": "Replace limit-order UI with market-only flow: amount-to-spend input, live execution preview, and Buy Market / Sell Market buttons using the market-order backend capability.",
       "acceptanceCriteria": [
-        "A new query hook fetches a user’s trend series from the backend and is used by the Activity leaderboard row/chart UI.",
-        "The leaderboard’s profile lookup no longer calls the restricted getUserProfile method; it uses the new public profile query.",
-        "All new queries include loading and error states consistent with existing patterns (e.g., Skeletons and simple English error text)."
+        "frontend/src/pages/CoinDetailPage.tsx no longer shows price and quantity inputs for placing orders.",
+        "The trade form for Buy and Sell each includes: (1) a single numeric input for amount (USD/stablecoin), (2) a live preview of the estimated execution, and (3) one prominent button labeled exactly \"Buy Market\" or \"Sell Market\" (English).",
+        "The preview clearly states the estimated quantity and the market price used for the estimate (English user-facing copy).",
+        "Buttons are disabled and an English validation message is shown when the amount is missing/invalid or when a market price cannot be determined."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/queries/useMarketCapTrend.ts",
-          "operation": "create",
-          "description": "Add a React Query hook to fetch a user's market cap trend series via the backend actor (getMarketCapTrend) keyed by principal, with enabled gating on actor readiness and simple retry behavior consistent with existing hooks."
+          "path": "frontend/src/hooks/queries/useOrders.ts",
+          "operation": "modify",
+          "description": "Add a new React Query mutation (e.g., usePlaceMarketOrder) that calls the existing backend capability for market orders (placeMarketOrder) using symbol + side + amountToSpend, and invalidates order book, balances, and related queries on success (similar to the existing limit-order mutation)."
         },
         {
-          "path": "frontend/src/hooks/queries/useUserProfile.ts",
+          "path": "frontend/src/pages/CoinDetailPage.tsx",
           "operation": "modify",
-          "description": "Update the per-user profile query hook to use the new public profile backend capability (getPublicUserProfile) instead of the restricted method, and add/adjust loading/error behavior consistent with existing patterns. Verify the component's usage instructions before implementing."
-        },
+          "description": "Remove limit-order price/quantity inputs and replace with market-only widgets: one amount-to-spend input (USDC), an English execution preview (estimated quantity + market price used), and one prominent button per side labeled exactly \"Buy Market\" / \"Sell Market\". Derive the market price for preview from the current order book (best opposite-side price); when unavailable, disable actions and show an English validation message. Ensure the new buttons call the market-order mutation (not the old limit-order path)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Update trade screen layout/styling to cohesively integrate the embedded chart and simplified market-order widgets in the existing terminal/cyber theme with English labels.",
+      "acceptanceCriteria": [
+        "The chart is visually integrated on the trade screen (not hidden behind a dialog) and does not interfere with core trade actions.",
+        "The simplified buy/sell UI is clearly scannable and reduces visual complexity compared to the prior limit-order form.",
+        "All user-facing text introduced/changed by this request is in English."
+      ],
+      "file_operations": [
         {
-          "path": "frontend/src/pages/ActivityPage.tsx",
+          "path": "frontend/src/pages/CoinDetailPage.tsx",
           "operation": "modify",
-          "description": "Wire Activity leaderboard rows to use the updated public profile hook and the new useMarketCapTrend hook, showing Skeletons while loading and simple English error text when a query fails, without breaking existing leaderboard rendering."
+          "description": "Refactor the trade screen layout to place the embedded chart and order book alongside the simplified market-order forms in a clear, responsive grid. Use existing Tailwind/terminal classes for consistent cyber styling, ensure hierarchy/scannability (chart + key stats, then action panels), and keep all new UI copy in English. Verify the component's usage instructions before implementing."
         }
       ]
     }

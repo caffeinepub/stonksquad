@@ -2,13 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-implement-a-frontend-trend-graph-ui-for-each-user-so-people-can-view-trend-history-from-the-leaderboard-activity-page",
-      "featureTitle": "Implement a frontend trend graph UI for each user so people can view trend history from the leaderboard (Activity page).",
+      "featureId": "feature-add-an-embedded-price-chart-to-the-trade-screen-for-every-asset-ticker-the-coin-detail-trade-page-showing-recent-historical-price-data-for-the-currently-selected-symbol-without-requiring-navigation-away-from-the-trade-screen",
+      "featureTitle": "Add an embedded price chart to the trade screen for every asset/ticker (the coin detail/trade page), showing recent historical price data for the currently selected symbol without requiring navigation away from the trade screen.",
       "files": [
-        "frontend/src/components/trends/MarketCapSparkline.tsx",
-        "frontend/src/components/trends/MarketCapTrendDialog.tsx",
-        "frontend/src/pages/ActivityPage.tsx",
-        "frontend/src/utils/trendChart.ts"
+        "frontend/src/components/trading/PriceHistoryChart.tsx",
+        "frontend/src/hooks/queries/usePriceHistory.ts",
+        "frontend/src/pages/CoinDetailPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -21,17 +20,16 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-4"
+        "REQ-1"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-react-query-hooks-to-fetch-per-user-trend-series-and-public-profile-data-and-update-the-leaderboard-row-implementation-to-use-the-new-public-profile-api-avoiding-unauthorized-traps",
-      "featureTitle": "Add React Query hooks to fetch per-user trend series and public profile data, and update the leaderboard row implementation to use the new public profile API (avoiding unauthorized traps).",
+      "featureId": "feature-simplify-the-buy-sell-ui-on-the-trade-screen-to-market-orders-only-remove-limit-order-inputs-price-and-quantity-and-replace-them-with-a-single-amount-to-spend-input-in-usd-stablecoin-plus-a-clear-estimated-execution-preview-and-one-prominent-action-button-per-side-buy-market-sell-market",
+      "featureTitle": "Simplify the buy/sell UI on the trade screen to market orders only: remove limit-order inputs (price and quantity) and replace them with a single amount-to-spend input (in USD/stablecoin) plus a clear estimated execution preview and one prominent action button per side (\"Buy Market\" / \"Sell Market\").",
       "files": [
-        "frontend/src/hooks/queries/useMarketCapTrend.ts",
-        "frontend/src/hooks/queries/useUserProfile.ts",
-        "frontend/src/pages/ActivityPage.tsx"
+        "frontend/src/hooks/queries/useOrders.ts",
+        "frontend/src/pages/CoinDetailPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -44,7 +42,28 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-5"
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-trade-screen-layout-and-styling-to-integrate-the-new-chart-and-simplified-market-order-widgets-into-a-cohesive-consistent-visual-theme-aligned-with-the-existing-terminal-cyber-styling-english-ui-labels",
+      "featureTitle": "Update the trade screen layout and styling to integrate the new chart and simplified market-order widgets into a cohesive, consistent visual theme aligned with the existing terminal/cyber styling (English UI labels).",
+      "files": [
+        "frontend/src/pages/CoinDetailPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "stripe@3.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }

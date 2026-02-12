@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,49 +17,92 @@ import {
 } from '@/components/ui/table';
 import { useCoinBySymbol } from '../hooks/queries/useCoinsDirectory';
 import { useGetOrderBook } from '../hooks/queries/useOrderBook';
-import { usePlaceOrder } from '../hooks/queries/useOrders';
+import { usePlaceMarketOrder } from '../hooks/queries/useOrders';
+import { usePriceHistory } from '../hooks/queries/usePriceHistory';
+import { PriceHistoryChart } from '../components/trading/PriceHistoryChart';
 import { OrderSide } from '../backend';
 import { TrendingUp, TrendingDown, User, AlertCircle, Zap, Info } from 'lucide-react';
-import { formatPriceWithUnit, formatPrice } from '../utils/currency';
+import { formatPrice } from '../utils/currency';
 
 export default function CoinDetailPage() {
   const { symbol } = useParams({ strict: false });
   const { data: coinData, isLoading: coinLoading, isError: coinError } = useCoinBySymbol(symbol);
   const { data: buyOrders, isLoading: buyOrdersLoading } = useGetOrderBook(symbol as string, OrderSide.buy);
   const { data: sellOrders, isLoading: sellOrdersLoading } = useGetOrderBook(symbol as string, OrderSide.sell);
-  const placeOrderMutation = usePlaceOrder();
+  const { data: priceHistory, isLoading: priceHistoryLoading } = usePriceHistory(symbol as string);
+  const placeMarketOrderMutation = usePlaceMarketOrder();
 
-  const [buyPrice, setBuyPrice] = useState('');
-  const [buyQuantity, setBuyQuantity] = useState('');
-  const [sellPrice, setSellPrice] = useState('');
-  const [sellQuantity, setSellQuantity] = useState('');
+  const [buyAmount, setBuyAmount] = useState('');
+  const [sellAmount, setSellAmount] = useState('');
 
-  const handlePlaceOrder = async (side: OrderSide) => {
-    const price = side === OrderSide.buy ? parseFloat(buyPrice) : parseFloat(sellPrice);
-    const quantity = side === OrderSide.buy ? parseInt(buyQuantity) : parseInt(sellQuantity);
+  // Calculate market prices from order book
+  const marketPrices = useMemo(() => {
+    // For buying, we look at the best sell order (lowest sell price)
+    const bestSellPrice = sellOrders && sellOrders.length > 0 
+      ? Math.min(...sellOrders.map(o => o.price))
+      : null;
+    
+    // For selling, we look at the best buy order (highest buy price)
+    const bestBuyPrice = buyOrders && buyOrders.length > 0
+      ? Math.max(...buyOrders.map(o => o.price))
+      : null;
 
-    if (!symbol || isNaN(price) || isNaN(quantity) || price <= 0 || quantity <= 0) {
+    return {
+      buyPrice: bestSellPrice, // Price to buy at (from sell orders)
+      sellPrice: bestBuyPrice, // Price to sell at (from buy orders)
+    };
+  }, [buyOrders, sellOrders]);
+
+  // Calculate execution previews
+  const buyPreview = useMemo(() => {
+    const amount = parseFloat(buyAmount);
+    if (isNaN(amount) || amount <= 0 || !marketPrices.buyPrice) return null;
+    
+    const estimatedQuantity = amount / marketPrices.buyPrice;
+    return {
+      quantity: estimatedQuantity,
+      price: marketPrices.buyPrice,
+      total: amount,
+    };
+  }, [buyAmount, marketPrices.buyPrice]);
+
+  const sellPreview = useMemo(() => {
+    const amount = parseFloat(sellAmount);
+    if (isNaN(amount) || amount <= 0 || !marketPrices.sellPrice) return null;
+    
+    const estimatedQuantity = amount / marketPrices.sellPrice;
+    return {
+      quantity: estimatedQuantity,
+      price: marketPrices.sellPrice,
+      total: amount,
+    };
+  }, [sellAmount, marketPrices.sellPrice]);
+
+  const handlePlaceMarketOrder = async (side: OrderSide) => {
+    const amount = side === OrderSide.buy ? parseFloat(buyAmount) : parseFloat(sellAmount);
+
+    if (!symbol || isNaN(amount) || amount <= 0) {
       return;
     }
 
+    // Convert to cents (USDC is stored in cents)
+    const amountInCents = Math.floor(amount * 100);
+
     try {
-      await placeOrderMutation.mutateAsync({
+      await placeMarketOrderMutation.mutateAsync({
         symbol: symbol as string,
         side,
-        price,
-        quantity: BigInt(quantity),
+        amountToSpend: BigInt(amountInCents),
       });
 
       // Clear form
       if (side === OrderSide.buy) {
-        setBuyPrice('');
-        setBuyQuantity('');
+        setBuyAmount('');
       } else {
-        setSellPrice('');
-        setSellQuantity('');
+        setSellAmount('');
       }
     } catch (error: any) {
-      console.error('Order placement error:', error);
+      console.error('Market order placement error:', error);
     }
   };
 
@@ -120,10 +163,24 @@ export default function CoinDetailPage() {
         </Alert>
       )}
 
+      {/* Price Chart */}
+      <Card className="border terminal-border">
+        <CardHeader>
+          <CardTitle className="font-display">Price History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PriceHistoryChart 
+            data={priceHistory || []} 
+            symbol={symbol as string}
+            isLoading={priceHistoryLoading}
+          />
+        </CardContent>
+      </Card>
+
       {/* Trading Interface */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-3 gap-6">
         {/* Order Book */}
-        <Card className="border terminal-border">
+        <Card className="border terminal-border lg:col-span-1">
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2">
               <Zap className="h-5 w-5 text-primary" />
@@ -148,15 +205,15 @@ export default function CoinDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="font-mono">Price (USDC)</TableHead>
-                        <TableHead className="font-mono">Quantity</TableHead>
+                        <TableHead className="font-mono">Price</TableHead>
+                        <TableHead className="font-mono">Qty</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {buyOrders.map((order) => (
                         <TableRow key={Number(order.orderId)}>
                           <TableCell className="font-mono text-accent font-bold">
-                            {formatPrice(order.price)}
+                            ${formatPrice(order.price)}
                           </TableCell>
                           <TableCell className="font-mono">{order.quantity.toString()}</TableCell>
                         </TableRow>
@@ -164,7 +221,7 @@ export default function CoinDetailPage() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground font-mono">
+                  <div className="text-center py-8 text-muted-foreground font-mono text-sm">
                     No buy orders
                   </div>
                 )}
@@ -177,15 +234,15 @@ export default function CoinDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="font-mono">Price (USDC)</TableHead>
-                        <TableHead className="font-mono">Quantity</TableHead>
+                        <TableHead className="font-mono">Price</TableHead>
+                        <TableHead className="font-mono">Qty</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {sellOrders.map((order) => (
                         <TableRow key={Number(order.orderId)}>
                           <TableCell className="font-mono text-destructive font-bold">
-                            {formatPrice(order.price)}
+                            ${formatPrice(order.price)}
                           </TableCell>
                           <TableCell className="font-mono">{order.quantity.toString()}</TableCell>
                         </TableRow>
@@ -193,7 +250,7 @@ export default function CoinDetailPage() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground font-mono">
+                  <div className="text-center py-8 text-muted-foreground font-mono text-sm">
                     No sell orders
                   </div>
                 )}
@@ -203,126 +260,158 @@ export default function CoinDetailPage() {
         </Card>
 
         {/* Trade Forms */}
-        <div className="space-y-6">
-          {/* Buy Form */}
-          <Card className="border-2 border-accent/20">
-            <CardHeader>
-              <CardTitle className="font-display flex items-center gap-2 text-accent">
-                <TrendingUp className="h-5 w-5" />
-                Buy {symbol}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="buy-price" className="font-mono font-bold">
-                  Price (USDC)
-                </Label>
-                <Input
-                  id="buy-price"
-                  type="number"
-                  placeholder="0.00"
-                  value={buyPrice}
-                  onChange={(e) => setBuyPrice(e.target.value)}
-                  step="0.01"
-                  className="terminal-border font-mono"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="buy-quantity" className="font-mono font-bold">
-                  Quantity
-                </Label>
-                <Input
-                  id="buy-quantity"
-                  type="number"
-                  placeholder="0"
-                  value={buyQuantity}
-                  onChange={(e) => setBuyQuantity(e.target.value)}
-                  className="terminal-border font-mono"
-                />
-              </div>
-              {buyPrice && buyQuantity && (
-                <div className="p-3 bg-muted/30 rounded border border-accent/20">
-                  <div className="text-sm font-mono text-muted-foreground">Total Cost</div>
-                  <div className="text-xl font-bold font-mono text-accent">
-                    {formatPriceWithUnit(parseFloat(buyPrice) * parseInt(buyQuantity))}
-                  </div>
+        <div className="space-y-6 lg:col-span-2">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Buy Form */}
+            <Card className="border-2 border-accent/20">
+              <CardHeader>
+                <CardTitle className="font-display flex items-center gap-2 text-accent">
+                  <TrendingUp className="h-5 w-5" />
+                  Buy {symbol}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="buy-amount" className="font-mono font-bold">
+                    Amount to Spend (USDC)
+                  </Label>
+                  <Input
+                    id="buy-amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={buyAmount}
+                    onChange={(e) => setBuyAmount(e.target.value)}
+                    step="0.01"
+                    className="terminal-border font-mono text-lg"
+                  />
                 </div>
-              )}
-              <Button
-                onClick={() => handlePlaceOrder(OrderSide.buy)}
-                disabled={placeOrderMutation.isPending}
-                className="w-full terminal-border font-mono font-bold"
-                size="lg"
-              >
-                {placeOrderMutation.isPending ? 'Placing...' : 'Place Buy Order'}
-              </Button>
-            </CardContent>
-          </Card>
 
-          {/* Sell Form */}
-          <Card className="border-2 border-destructive/20">
-            <CardHeader>
-              <CardTitle className="font-display flex items-center gap-2 text-destructive">
-                <TrendingDown className="h-5 w-5" />
-                Sell {symbol}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="sell-price" className="font-mono font-bold">
-                  Price (USDC)
-                </Label>
-                <Input
-                  id="sell-price"
-                  type="number"
-                  placeholder="0.00"
-                  value={sellPrice}
-                  onChange={(e) => setSellPrice(e.target.value)}
-                  step="0.01"
-                  className="terminal-border font-mono"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sell-quantity" className="font-mono font-bold">
-                  Quantity
-                </Label>
-                <Input
-                  id="sell-quantity"
-                  type="number"
-                  placeholder="0"
-                  value={sellQuantity}
-                  onChange={(e) => setSellQuantity(e.target.value)}
-                  className="terminal-border font-mono"
-                />
-              </div>
-              {sellPrice && sellQuantity && (
-                <div className="p-3 bg-muted/30 rounded border border-destructive/20">
-                  <div className="text-sm font-mono text-muted-foreground">Total Receive</div>
-                  <div className="text-xl font-bold font-mono text-destructive">
-                    {formatPriceWithUnit(parseFloat(sellPrice) * parseInt(sellQuantity))}
+                {/* Execution Preview */}
+                {buyPreview ? (
+                  <div className="p-4 bg-accent/10 rounded border border-accent/30 space-y-2">
+                    <div className="text-xs font-mono text-muted-foreground uppercase">
+                      Estimated Execution
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-mono text-muted-foreground">Quantity:</span>
+                        <span className="text-sm font-bold font-mono text-accent">
+                          ~{buyPreview.quantity.toFixed(2)} shares
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-mono text-muted-foreground">Market Price:</span>
+                        <span className="text-sm font-bold font-mono text-accent">
+                          ${formatPrice(buyPreview.price)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+                ) : (
+                  <div className="p-4 bg-muted/20 rounded border border-border">
+                    <div className="text-sm font-mono text-muted-foreground text-center">
+                      {!marketPrices.buyPrice 
+                        ? 'No market price available. Place a sell order first.'
+                        : 'Enter amount to see preview'}
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={() => handlePlaceMarketOrder(OrderSide.buy)}
+                  disabled={
+                    placeMarketOrderMutation.isPending || 
+                    !buyPreview || 
+                    !marketPrices.buyPrice
+                  }
+                  className="w-full terminal-border font-mono font-bold text-lg"
+                  size="lg"
+                >
+                  {placeMarketOrderMutation.isPending ? 'Processing...' : 'Buy Market'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Sell Form */}
+            <Card className="border-2 border-destructive/20">
+              <CardHeader>
+                <CardTitle className="font-display flex items-center gap-2 text-destructive">
+                  <TrendingDown className="h-5 w-5" />
+                  Sell {symbol}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sell-amount" className="font-mono font-bold">
+                    Amount to Spend (USDC)
+                  </Label>
+                  <Input
+                    id="sell-amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={sellAmount}
+                    onChange={(e) => setSellAmount(e.target.value)}
+                    step="0.01"
+                    className="terminal-border font-mono text-lg"
+                  />
                 </div>
-              )}
-              <Button
-                onClick={() => handlePlaceOrder(OrderSide.sell)}
-                disabled={placeOrderMutation.isPending}
-                variant="destructive"
-                className="w-full terminal-border font-mono font-bold"
-                size="lg"
-              >
-                {placeOrderMutation.isPending ? 'Placing...' : 'Place Sell Order'}
-              </Button>
-            </CardContent>
-          </Card>
+
+                {/* Execution Preview */}
+                {sellPreview ? (
+                  <div className="p-4 bg-destructive/10 rounded border border-destructive/30 space-y-2">
+                    <div className="text-xs font-mono text-muted-foreground uppercase">
+                      Estimated Execution
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-mono text-muted-foreground">Quantity:</span>
+                        <span className="text-sm font-bold font-mono text-destructive">
+                          ~{sellPreview.quantity.toFixed(2)} shares
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-mono text-muted-foreground">Market Price:</span>
+                        <span className="text-sm font-bold font-mono text-destructive">
+                          ${formatPrice(sellPreview.price)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-muted/20 rounded border border-border">
+                    <div className="text-sm font-mono text-muted-foreground text-center">
+                      {!marketPrices.sellPrice 
+                        ? 'No market price available. Place a buy order first.'
+                        : 'Enter amount to see preview'}
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={() => handlePlaceMarketOrder(OrderSide.sell)}
+                  disabled={
+                    placeMarketOrderMutation.isPending || 
+                    !sellPreview || 
+                    !marketPrices.sellPrice
+                  }
+                  variant="destructive"
+                  className="w-full terminal-border font-mono font-bold text-lg"
+                  size="lg"
+                >
+                  {placeMarketOrderMutation.isPending ? 'Processing...' : 'Sell Market'}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
       {/* Error Display */}
-      {placeOrderMutation.isError && (
+      {placeMarketOrderMutation.isError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="font-mono">
-            {placeOrderMutation.error?.message || 'Failed to place order'}
+            {placeMarketOrderMutation.error?.message || 'Failed to place market order'}
           </AlertDescription>
         </Alert>
       )}

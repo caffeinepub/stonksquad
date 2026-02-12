@@ -48,6 +48,10 @@ export const Order = IDL.Record({
   'quantity' : IDL.Nat,
   'price' : IDL.Float64,
 });
+export const PricePoint = IDL.Record({
+  'timestamp' : Time,
+  'price' : IDL.Float64,
+});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
@@ -113,6 +117,11 @@ export const idlService = IDL.Service({
       [IDL.Vec(Order)],
       ['query'],
     ),
+  'getPriceHistory' : IDL.Func(
+      [IDL.Text, IDL.Opt(IDL.Nat)],
+      [IDL.Vec(PricePoint)],
+      ['query'],
+    ),
   'getPublicUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -126,6 +135,7 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+  'placeMarketOrder' : IDL.Func([IDL.Text, OrderSide, IDL.Nat], [IDL.Nat], []),
   'placeOrder' : IDL.Func(
       [IDL.Text, OrderSide, IDL.Float64, IDL.Nat],
       [IDL.Nat],
@@ -183,6 +193,7 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Nat,
     'price' : IDL.Float64,
   });
+  const PricePoint = IDL.Record({ 'timestamp' : Time, 'price' : IDL.Float64 });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
@@ -245,6 +256,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Order)],
         ['query'],
       ),
+    'getPriceHistory' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Nat)],
+        [IDL.Vec(PricePoint)],
+        ['query'],
+      ),
     'getPublicUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -258,6 +274,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
+    'placeMarketOrder' : IDL.Func(
+        [IDL.Text, OrderSide, IDL.Nat],
+        [IDL.Nat],
+        [],
+      ),
     'placeOrder' : IDL.Func(
         [IDL.Text, OrderSide, IDL.Float64, IDL.Nat],
         [IDL.Nat],

@@ -136,6 +136,10 @@ export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
+export interface PricePoint {
+    timestamp: Time;
+    price: number;
+}
 export type StripeSessionStatus = {
     __kind__: "completed";
     completed: {
@@ -181,11 +185,13 @@ export interface backendInterface {
     getCreatorCoinsWithMarketCaps(): Promise<Array<[Principal, Array<Coin>, bigint]>>;
     getMarketCapTrend(user: Principal): Promise<Array<MarketCapTrendPoint>>;
     getOrderBook(symbol: string, side: OrderSide, depth: bigint | null): Promise<Array<Order>>;
+    getPriceHistory(symbol: string, maxPoints: bigint | null): Promise<Array<PricePoint>>;
     getPublicUserProfile(user: Principal): Promise<UserProfile | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
+    placeMarketOrder(symbol: string, side: OrderSide, amountToSpend: bigint): Promise<bigint>;
     placeOrder(symbol: string, side: OrderSide, price: number, quantity: bigint): Promise<bigint>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
@@ -390,6 +396,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getPriceHistory(arg0: string, arg1: bigint | null): Promise<Array<PricePoint>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPriceHistory(arg0, to_candid_opt_n14(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPriceHistory(arg0, to_candid_opt_n14(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
     async getPublicUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -457,6 +477,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isStripeConfigured();
+            return result;
+        }
+    }
+    async placeMarketOrder(arg0: string, arg1: OrderSide, arg2: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.placeMarketOrder(arg0, to_candid_OrderSide_n12(this._uploadFile, this._downloadFile, arg1), arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.placeMarketOrder(arg0, to_candid_OrderSide_n12(this._uploadFile, this._downloadFile, arg1), arg2);
             return result;
         }
     }

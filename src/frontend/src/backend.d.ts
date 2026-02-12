@@ -54,6 +54,10 @@ export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
+export interface PricePoint {
+    timestamp: Time;
+    price: number;
+}
 export type StripeSessionStatus = {
     __kind__: "completed";
     completed: {
@@ -98,11 +102,13 @@ export interface backendInterface {
     getCreatorCoinsWithMarketCaps(): Promise<Array<[Principal, Array<Coin>, bigint]>>;
     getMarketCapTrend(user: Principal): Promise<Array<MarketCapTrendPoint>>;
     getOrderBook(symbol: string, side: OrderSide, depth: bigint | null): Promise<Array<Order>>;
+    getPriceHistory(symbol: string, maxPoints: bigint | null): Promise<Array<PricePoint>>;
     getPublicUserProfile(user: Principal): Promise<UserProfile | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
+    placeMarketOrder(symbol: string, side: OrderSide, amountToSpend: bigint): Promise<bigint>;
     placeOrder(symbol: string, side: OrderSide, price: number, quantity: bigint): Promise<bigint>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;

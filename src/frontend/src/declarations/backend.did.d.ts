@@ -33,6 +33,7 @@ export interface Order {
 }
 export type OrderSide = { 'buy' : null } |
   { 'sell' : null };
+export interface PricePoint { 'timestamp' : Time, 'price' : number }
 export interface ShoppingItem {
   'productName' : string,
   'currency' : string,
@@ -96,11 +97,13 @@ export interface _SERVICE {
     [string, OrderSide, [] | [bigint]],
     Array<Order>
   >,
+  'getPriceHistory' : ActorMethod<[string, [] | [bigint]], Array<PricePoint>>,
   'getPublicUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
+  'placeMarketOrder' : ActorMethod<[string, OrderSide, bigint], bigint>,
   'placeOrder' : ActorMethod<[string, OrderSide, number, bigint], bigint>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,

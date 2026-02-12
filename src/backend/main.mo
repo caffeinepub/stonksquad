@@ -10,6 +10,7 @@ import Principal "mo:core/Principal";
 import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
+import Migration "migration";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
@@ -17,6 +18,7 @@ import Stripe "stripe/stripe";
 import OutCall "http-outcalls/outcall";
 
 // Persistent Market Cap Tracking
+(with migration = Migration.run)
 actor {
   // Extend access control
   let accessControlState = AccessControl.initState();
@@ -90,6 +92,11 @@ actor {
     marketCap : Nat;
   };
 
+  type PricePoint = {
+    timestamp : Time.Time;
+    price : Float;
+  };
+
   // Persistent Maps
   let coins = Map.empty<Text, Coin>();
   let users = Map.empty<Principal, UserProfile>();
@@ -98,11 +105,13 @@ actor {
   let orders = Map.empty<Nat, Order>();
   let usdcBalances = Map.empty<Principal, Balance>();
   let marketCapTrends = Map.empty<Principal, List.List<MarketCapTrendPoint>>();
+  let priceHistory = Map.empty<Text, List.List<PricePoint>>();
 
   // Constants
   let INITIAL_SQD_AIRDROP = 1000;
   let INITIAL_COIN_SUPPLY = 10000;
   let DEFAULT_ORDER_BOOK_DEPTH = 10;
+  let MAX_HISTORY_POINTS = 200;
 
   // Stripe Sessions (not persistent)
   let stripeSessions = Map.empty<Text, StripeSession>();
@@ -237,10 +246,11 @@ actor {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    // Users can only view their own profile unless they are admin
+    // Users can only view their own profile unless admin
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
+
     users.get(user);
   };
 
@@ -248,7 +258,9 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can create profiles");
     };
+
     if (profile.username.isEmpty() or profile.displayName.isEmpty()) { Runtime.trap("Username and Display Name cannot be empty") };
+
     if (users.containsKey(caller)) { Runtime.trap("User already exists") };
     if (profile.username.size() > 20) { Runtime.trap("Username too long") };
 
@@ -263,8 +275,10 @@ actor {
 
     users.add(caller, profile);
     let ownCoin = getOrCreateCoin(caller);
+
+    // Create initial SQD balance with zero amount
     let sqdBalance : Balance = {
-      var amount = INITIAL_SQD_AIRDROP;
+      var amount = 0;
     };
     sqdBalances.add(caller, sqdBalance);
 
@@ -285,9 +299,11 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
+
     if (not (users.containsKey(caller))) {
       Runtime.trap("User profile does not exist. Create profile first.");
     };
+
     if (profile.username.isEmpty() or profile.displayName.isEmpty()) { Runtime.trap("Username and Display Name cannot be empty") };
     if (profile.username.size() > 20) { Runtime.trap("Username too long") };
 
@@ -311,6 +327,7 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can place orders");
     };
+
     if (quantity == 0) { Runtime.trap("Order quantity must be greater than zero") };
     if (price <= 0.0) { Runtime.trap("Price must be positive") };
 
@@ -330,10 +347,12 @@ actor {
         if (requiredUsdc < 0) {
           Runtime.trap("Invalid order value calculation");
         };
+
         let userUsdcBalance = switch (usdcBalances.get(caller)) {
           case (null) { Runtime.trap("USDC Balance does not exist") };
           case (?balance) { balance };
         };
+
         if (userUsdcBalance.amount < Int.abs(requiredUsdc)) {
           Runtime.trap("Insufficient USDC balance to place buy order");
         };
@@ -354,13 +373,35 @@ actor {
     orders.add(orderId, newOrder);
     nextOrderId += 1;
 
+    // Create and update price point in history
+    let newPricePoint : PricePoint = {
+      timestamp = Time.now();
+      price;
+    };
+
+    let history = switch (priceHistory.get(symbol)) {
+      case (null) { List.empty<PricePoint>() };
+      case (?existingHistory) { existingHistory };
+    };
+    history.add(newPricePoint);
+
+    // Ensure history list doesn't exceed MAX_HISTORY_POINTS
+    let historySize = history.size();
+    if (historySize > MAX_HISTORY_POINTS) {
+      // This will keep latest first and trim oldest
+      let trimmedHistory = List.fromArray<PricePoint>(history.toArray().sliceToArray(0, MAX_HISTORY_POINTS));
+      priceHistory.add(symbol, trimmedHistory);
+    } else {
+      priceHistory.add(symbol, history);
+    };
+
     // Update market cap trend after new order
     updateMarketCapTrend(caller);
     orderId;
   };
 
   public query ({ caller }) func getOrderBook(symbol : Text, side : OrderSide, depth : ?Nat) : async [Order] {
-    // No authorization check - public market data accessible to all users including guests
+    // No auth check, public market data
     let filteredOrders = orders.values().filter(
       func(order) {
         order.coinSymbol == symbol and order.side == side
@@ -403,10 +444,9 @@ actor {
   };
 
   public query ({ caller }) func getCreatorCapRanking() : async [(Principal, Nat)] {
-    // No authorization check - public leaderboard data accessible to all users including guests
     let entriesList = List.empty<(Principal, Nat)>();
 
-    for ((principal, balance) in sqdBalances.entries()) {
+    for ((principal, _balance) in sqdBalances.entries()) {
       entriesList.add((principal, getTotalMarketCap(principal)));
     };
 
@@ -416,14 +456,14 @@ actor {
         Nat.compare(b.1, a.1);
       }
     );
+
     sortedEntries;
   };
 
   public query ({ caller }) func getCreatorCoinsWithMarketCaps() : async [(Principal, [Coin], Nat)] {
-    // No authorization check - public creator data accessible to all users including guests
     let resultList = List.empty<(Principal, [Coin], Nat)>();
 
-    for ((creator, userProfile) in users.entries()) {
+    for ((creator, _userProfile) in users.entries()) {
       let creatorCoins = getCreatorCoins(creator);
       var totalCap : Nat = 0;
       for (coin in creatorCoins.values()) {
@@ -443,10 +483,142 @@ actor {
     };
   };
 
+  // Price History Query API
+  public query ({ caller }) func getPriceHistory(symbol : Text, maxPoints : ?Nat) : async [PricePoint] {
+    switch (priceHistory.get(symbol)) {
+      case (null) { [] };
+      case (?history) {
+        let points = history.toArray();
+        let pointsToKeep = switch (maxPoints) {
+          case (null) { MAX_HISTORY_POINTS };
+          case (?n) { Nat.min(n, MAX_HISTORY_POINTS) };
+        };
+        let pointsSize = points.size();
+        if (pointsSize > pointsToKeep) {
+          points.sliceToArray(0, pointsToKeep);
+        } else { points };
+      };
+    };
+  };
+
+  public shared ({ caller }) func placeMarketOrder(symbol : Text, side : OrderSide, amountToSpend : Nat) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can place market orders");
+    };
+
+    // Validate amountToSpend is positive
+    if (amountToSpend <= 0) { Runtime.trap("Amount to spend must be positive for market order") };
+
+    // Retrieve current market price from order book
+    let currentMarketPrice = calculateCurrentPrice(symbol);
+
+    // Validate price against low liquidity
+    if (currentMarketPrice <= 0.0) { Runtime.trap("Price must be positive for market order") };
+
+    if (not (coins.containsKey(symbol))) {
+      Runtime.trap("Coin does not exist");
+    };
+
+    var requiredUsdc : ?Int = null;
+
+    var userUsdcBalance = 0;
+    switch (usdcBalances.get(caller)) {
+      case (null) { Runtime.trap("USDC Balance does not exist") };
+      case (?balance) { userUsdcBalance := balance.amount };
+    };
+
+    let adjustedQuantity = switch (side) {
+      case (#buy) {
+        let calculation = currentMarketPrice * amountToSpend.toFloat();
+        if (calculation <= 0.0) {
+          Runtime.trap("Invalid computed quantity for buy");
+        };
+        requiredUsdc := ?(amountToSpend);
+        calculation.toInt().toNat();
+      };
+      case (#sell) {
+        let tmp = currentMarketPrice * amountToSpend.toFloat();
+        // Added overflow check
+        if (tmp >= amountToSpend.toFloat()) {
+          let calculation = tmp / amountToSpend.toFloat();
+          if (calculation <= 0.0) {
+            Runtime.trap("Invalid computed quantity for sell");
+          };
+          calculation.toInt().toNat();
+        } else {
+          Runtime.trap("Invalid computed quantity for sell");
+        };
+      };
+    };
+
+    switch (side) {
+      case (#buy) {
+        switch (requiredUsdc) {
+          case (null) { Runtime.trap("Missing required USDC for buy") };
+          case (?rUsdc) {
+            if (userUsdcBalance < Int.abs(rUsdc)) {
+              Runtime.trap("Insufficient USDC balance for buy");
+            };
+          };
+        };
+      };
+      case (#sell) {
+        let coinsToSell = getUserCoinBalance(caller, symbol);
+        if (coinsToSell < adjustedQuantity) {
+          Runtime.trap("Insufficient coin balance for sell");
+        };
+      };
+    };
+
+    // Ensure Non-0 Quantities
+    if (adjustedQuantity <= 0) { Runtime.trap("Order quantity must be greater than zero") };
+
+    let orderId = nextOrderId;
+    let newOrder : Order = {
+      orderId;
+      user = caller;
+      coinSymbol = symbol;
+      side;
+      price = currentMarketPrice;
+      quantity = adjustedQuantity;
+      timestamp = Time.now();
+    };
+
+    orders.add(orderId, newOrder);
+    nextOrderId += 1;
+
+    // Create and update price point in history
+    let newPricePoint : PricePoint = {
+      timestamp = Time.now();
+      price = currentMarketPrice;
+    };
+
+    let history = switch (priceHistory.get(symbol)) {
+      case (null) { List.empty<PricePoint>() };
+      case (?existingHistory) { existingHistory };
+    };
+    history.add(newPricePoint);
+
+    // Ensure history list doesn't exceed MAX_HISTORY_POINTS
+    let historySize = history.size();
+    if (historySize > MAX_HISTORY_POINTS) {
+      let trimmedHistory = List.fromArray<PricePoint>(history.toArray().sliceToArray(0, MAX_HISTORY_POINTS));
+      priceHistory.add(symbol, trimmedHistory);
+    } else {
+      priceHistory.add(symbol, history);
+    };
+
+    // Update market cap trend after new order
+    updateMarketCapTrend(caller);
+
+    // Slow and returns created orderId
+    orderId;
+  };
+
   var configuration : ?Stripe.StripeConfiguration = null;
 
   public query func isStripeConfigured() : async Bool {
-    // No authorization check - public configuration status accessible to all
+    // No auth check, public configuration status
     configuration != null;
   };
 
@@ -465,7 +637,7 @@ actor {
   };
 
   public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    // No authorization check - transform function for HTTP outcalls
+    // No auth check, transform function for HTTP outcalls
     OutCall.transform(input);
   };
 
